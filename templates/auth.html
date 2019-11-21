@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<title>Expense analyzer</title>
+<head>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyChNdfU2rmKfiD51imTxvno_C7qcxIT0ow",
+        authDomain: "expense-analyzer-250114.firebaseapp.com",
+        databaseURL: "https://expense-analyzer-250114.firebaseio.com",
+        projectId: "expense-analyzer-250114",
+        storageBucket: "expense-analyzer-250114.appspot.com",
+        messagingSenderId: "342307012502",
+        appId: "1:342307012502:web:2a62e03981edcc4f"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/4.2.0/firebaseui.css" />
+    <script type="text/javascript">
+      // FirebaseUI config.
+      var uiConfig = {
+        signInSuccessUrl: '/upload',
+
+        // get the user id token and pass it on to the upload page
+
+        //signInSuccess: function(currentUser, credential, redirectUrl) {
+         // const userId = currentUser.uid;
+          // Manually redirect.
+         // window.location.assign(`/users/${userId}`);
+          // Do not automatically redirect.
+          //return false;
+        //},
+
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.GoogleAuthProvider.PROVIDER_ID
+        ],
+
+        // tosUrl and privacyPolicyUrl accept either url string or a callback function
+        // Terms of service url/callback.
+        tosUrl: '<your-tos-url>',
+
+        // Privacy policy url/callback.
+        privacyPolicyUrl: function() {
+          window.location.assign('<your-privacy-policy-url>');
+        }
+      };
+
+      // Initialize the FirebaseUI Widget using Firebase.
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+      // The start method will wait until the DOM is loaded.
+      ui.start('#firebaseui-auth-container', uiConfig);
+
+
+    </script>
+  </head>
+  <body>
+    <!-- The surrounding HTML is left untouched by FirebaseUI.
+         Your app may use that space for branding, controls and other customizations.-->
+    <h1> Welcome to the expense analyzer app</h1>
+    <div> Please sign in to continue </div>
+    <div id="firebaseui-auth-container"></div>
+  </body>
+</html>

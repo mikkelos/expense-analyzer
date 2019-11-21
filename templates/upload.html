@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<title>Expense analyzer</title>
+<head>
+<meta charset="UTF-8">
+<title>Title</title>
+</head>
+<body>
+<h1>Expense Analyzer</h1>
+<form action="" method=post enctype=multipart/form-data>
+  Upload image: <input type="file" name="input_image" accept="image/*">
+  <br>
+  <br>
+  Select store type: <select name="store_name">
+        <option value="coop_mega">Coop Mega</option>
+        <option value="bunnpris">Bunnpris (TBA)</option>
+        <option value="rema1000">Rema 1000 (TBA)</option>
+    </select>
+    <br><br>
+  <input type="submit" value=Upload>
+</form>
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#config-web-app -->
+<script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyChNdfU2rmKfiD51imTxvno_C7qcxIT0ow",
+    authDomain: "expense-analyzer-250114.firebaseapp.com",
+    databaseURL: "https://expense-analyzer-250114.firebaseio.com",
+    projectId: "expense-analyzer-250114",
+    storageBucket: "expense-analyzer-250114.appspot.com",
+    messagingSenderId: "342307012502",
+    appId: "1:342307012502:web:2a62e03981edcc4f"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // Get the Auth service for the default app
+  var defaultAuth = firebase.auth();
+</script>
+
+
+
+</body>
+</html>
