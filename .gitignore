@@ -2,6 +2,10 @@
 # Data and image files
 test_images/
 
+
+# Config files and app keys:
+config_files/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
