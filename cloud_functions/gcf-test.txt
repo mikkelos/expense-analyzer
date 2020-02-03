@@ -1,0 +1,4 @@
+This is some random text document to test the trigger of cloud function once cloud storage is updated!
+
+Does this appear??
+Woohoo, let's give it a try!
