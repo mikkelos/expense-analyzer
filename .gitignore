@@ -1,7 +1,7 @@
 
 # Data and image files
 test_images/
-
+data/
 
 # Config files and app keys:
 config_files/
