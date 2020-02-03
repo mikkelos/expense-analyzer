@@ -3,6 +3,9 @@
 test_images/
 data/
 
+# Test files
+test*
+
 # Open system files, prefixed by ~$
 ~$*
 
