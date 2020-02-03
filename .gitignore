@@ -3,6 +3,9 @@
 test_images/
 data/
 
+# Open system files, prefixed by ~$
+~$*
+
 # Config files and app keys:
 config_files/
 
