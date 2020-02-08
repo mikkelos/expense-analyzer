@@ -3,14 +3,18 @@ from werkzeug.utils import secure_filename
 # from firebase_admin import auth
 
 import os
-from os.path import join, dirname
-from dotenv import load_dotenv
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
+# from os.path import join, dirname
+# from dotenv import load_dotenv
 
 import google.oauth2.id_token
 import google.auth.transport.requests
 # import requests_toolbelt.adapters.appengine
+
+# Import local functions
+from gcp_interactions.datastore import upload_blob
+
+# dotenv_path = join(dirname(__file__), '.env')
+# load_dotenv(dotenv_path)
 
 # Use the App Engine Requests adapter. This makes sure that Requests uses
 # URLFetch.
@@ -58,7 +62,6 @@ def authorize():
 # def index():
 #     return render_template('index.html')
 def hello():
-
     if request.method == "POST":
         # Check the file input type
         if 'input_image' not in request.files:
@@ -103,6 +106,54 @@ def has_token(headers):
 def upload():
     print("on upload route")
     return render_template("upload.html")
+
+
+@app.route("/uploadImageToBucket", methods=["GET", "POST"])
+def uploadImageToBucket():
+    print("READY TO UPLOAD FILE")
+
+    # Check the file input type
+    if request.method == "POST":
+        if 'input_image' not in request.files:
+            print('No file part')
+            # return redirect(request.url)
+            return '''<!doctype html>
+                <html>
+                <body>
+                NO FILE WAS FOUND!
+                <br>
+                </body>
+                </html>'''
+        file = request.files['input_image']
+        # if user does not select file, browser also submit an empty part without filename
+        if file.filename == '':
+            print('No selected file')
+            return redirect(request.url)
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+
+        # Save file to DataStore!
+        upload_blob(file)
+
+        return '''
+        <!doctype html>
+        <html>
+        <body>
+        This is a long text to test if data is passed correctly.
+        <br>
+        The store selected was {} and the file was called {}
+        </body>
+        </html>
+        '''.format(request.form["store_name"], filename)
+    else:
+        return '''<!doctype html>
+            <html>
+            <body>
+            GOT A GET REQUEST, NOT POST
+            <br>
+            </body>
+            </html>'''
 
 
 @app.route("/getExpenses", methods=["GET"])
