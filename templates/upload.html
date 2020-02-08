@@ -2,12 +2,12 @@
 <html lang="en">
 <title>Expense analyzer</title>
 <head>
-<meta charset="UTF-8">
-<title>Title</title>
+  <meta charset="UTF-8">
+  <title>Title</title>
 </head>
 <body>
 <h1>Expense Analyzer</h1>
-<form action="" method=post enctype=multipart/form-data>
+<form action="/uploadImageToBucket" method=post enctype=multipart/form-data>
   Upload image: <input type="file" name="input_image" accept="image/*">
   <br>
   <br>
@@ -16,6 +16,8 @@
         <option value="bunnpris">Bunnpris (TBA)</option>
         <option value="rema1000">Rema 1000 (TBA)</option>
     </select>
+    <br>
+    <input type="hidden" name="user" id="user" value="NAME HERE">
     <br><br>
   <input type="submit" value=Upload>
 </form>
@@ -30,21 +32,36 @@
 <script>
   // Your web app's Firebase configuration
   var firebaseConfig = {
-    apiKey: "AIzaSyChNdfU2rmKfiD51imTxvno_C7qcxIT0ow",
-    authDomain: "expense-analyzer-250114.firebaseapp.com",
-    databaseURL: "https://expense-analyzer-250114.firebaseio.com",
-    projectId: "expense-analyzer-250114",
-    storageBucket: "expense-analyzer-250114.appspot.com",
-    messagingSenderId: "342307012502",
-    appId: "1:342307012502:web:2a62e03981edcc4f"
+    apiKey: "AIzaSyAfeYX2LU7mNDxfupyeMCb0HmJ1MCO4KqQ",
+    authDomain: "expense-analyzer-260008.firebaseapp.com",
+    databaseURL: "https://expense-analyzer-260008.firebaseio.com",
+    projectId: "expense-analyzer-260008",
+    storageBucket: "expense-analyzer-260008.appspot.com",
+    messagingSenderId: "438670908109",
+    appId: "1:438670908109:web:4cb0e83043cbe89ac82784"
   };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
 
   // Get the Auth service for the default app
   var defaultAuth = firebase.auth();
-</script>
 
+  firebase.auth().onAuthStateChanged(
+    function(user) {
+      if (user) {
+        var name = user.displayName;
+        console.log(user);
+        /* If the provider gives a display name, use the name for the
+        personal welcome message. Otherwise, use the user's email. */
+        var welcomeName = name ? name : user.email;
+        console.log(welcomeName);
+        document.getElementById('user').value = welcomeName;
+      } else {
+        console.log("No user found")
+      }
+  });
+
+</script>
 
 
 </body>
