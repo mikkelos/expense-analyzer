@@ -2,6 +2,7 @@
 # Imports the Google Cloud client library
 import os
 from google.cloud import datastore
+from google.cloud import storage
 from google.oauth2 import service_account
 
 """ CONSTANTS """
@@ -29,10 +30,35 @@ credentials = service_account.Credentials.from_service_account_file(
     key_path,
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
-# Instantiates a client
+# Instantiate clients
 datastore_client = datastore.Client(
     credentials=credentials
 )
+
+
+""" STORAGE BUCKET """
+
+
+def upload_blob(file):
+    """ Uploads a file to the bucket."""
+    if local_run:
+        storage_client = storage.Client(
+            credentials=credentials
+        )
+    else:
+        storage_client = storage.Client()
+
+    bucket = storage_client.bucket(UNPROCESSED_BUCKET_NAME)
+    blob = bucket.blob(file.filename)
+    blob.upload_from_file(file)
+
+    print('Blob {} uploadted to bucket {}.'.format(
+        file.filename,
+        bucket.name
+        ))
+
+
+""" DATASTORE """
 
 
 def missing_category(max_records):
