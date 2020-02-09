@@ -15,3 +15,21 @@
 
 node_modules
 #!include:.gitignore
+
+# Project folders not needed on app engine
+archive
+cloud_functions
+data
+notebooks
+test_images
+LICENSE
+README.md
+
+# Config files
+config_files
+
+# Env files
+.idea
+.env
+Pipfile
+Pipfile.lock
