@@ -11,7 +11,13 @@ import google.auth.transport.requests
 # import requests_toolbelt.adapters.appengine
 
 # Import local functions
-from gcp_interactions.datastore import upload_blob
+from gcp_interactions.datastore import (
+    upload_blob,
+    get_missing_category,
+    get_all_categories,
+    get_main_categories,
+    update_item_category
+    )
 
 # dotenv_path = join(dirname(__file__), '.env')
 # load_dotenv(dotenv_path)
@@ -28,7 +34,7 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 firebaseConfig = {
-  "apiKey": os.environ['FIREBASE_API_KEY'],
+  "apiKey": "AIzaSyAfeYX2LU7mNDxfupyeMCb0HmJ1MCO4KqQ",  # os.environ['FIREBASE_API_KEY'],
   "authDomain": "expense-analyzer-260008.firebaseapp.com",
   "databaseURL": "https://expense-analyzer-260008.firebaseio.com",
   "projectId": "expense-analyzer-260008",
@@ -125,6 +131,7 @@ def uploadImageToBucket():
                 </body>
                 </html>'''
         file = request.files['input_image']
+        user = request.form["user"]
         # if user does not select file, browser also submit an empty part without filename
         if file.filename == '':
             print('No selected file')
@@ -134,7 +141,7 @@ def uploadImageToBucket():
             filename = secure_filename(file.filename)
 
         # Save file to DataStore!
-        upload_blob(file)
+        upload_blob(file, user)
 
         return '''
         <!doctype html>
@@ -154,6 +161,59 @@ def uploadImageToBucket():
             <br>
             </body>
             </html>'''
+
+
+@app.route("/assignCategories", methods=["GET", "POST"])
+def assignCategories():
+    """ This function structures and returns and table where the user can
+        go through all unassigned items and assign a category """
+
+    if request.method == "GET":
+        # First run the missing categories function
+        items_without_category = get_missing_category(10)
+        item_names_without_category = []
+
+        for cat in items_without_category:
+            item_names_without_category.append(cat.key.id_or_name)
+
+        # Run a function that fetches all possible categories
+        all_categories = get_all_categories()
+        all_main_categories = get_main_categories(all_categories)
+
+        # Return the list of items in a tabular format
+
+        # Await feedback from user. Make a way to search in the categories
+
+        # Iterate through the user feedback and write back to the datastore
+
+        # Give the user two choices: 10 more, go back
+        return render_template("missing_categories.html",
+                               item_list=item_names_without_category,
+                               category_dict=all_categories,
+                               main_category_dict=all_main_categories)
+
+    elif request.method == "POST":
+        # PARSE TABLE INPUT!
+        form_data = request.form
+
+        # Values are on the format item1: category1
+
+        updated_categories = {}  # Key is item name, value is new category
+
+        for key in form_data.keys():
+            if "item" in key:
+                input_number = key.replace("item", "")
+                category_key = "category"+input_number
+
+                item_key = form_data[key]
+                category = form_data[category_key]
+
+                updated_categories[item_key] = category
+
+        # Call function to udpate values in google datastore
+        update_item_category(updated_categories)
+
+        return render_template("missing_categories.html")
 
 
 @app.route("/getExpenses", methods=["GET"])
@@ -206,4 +266,5 @@ if __name__ == '__main__':
     # http://flask.pocoo.org/docs/1.0/quickstart/#static-files. Once deployed,
     # App Engine itself will serve those files as configured in app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
-# [START gae_python37_render_template]
+
+    # [START gae_python37_render_template]
