@@ -16,6 +16,10 @@ import os  # for use with setting env variables
 import re
 from datetime import datetime
 
+# TODO
+# Change from TESTUSER To user from metadata of image_uri
+# Change image name of blob, so that it instead contains a datestamp
+
 
 # STORAGE BUCKET NAMES
 UNPROCESSED_BUCKET_NAME = "unprocessed_expense_bucket_1"
@@ -90,6 +94,16 @@ def gcs_trigger(data, context):
     receipt_id = receipt_id_and_datetime.split(" ")[0].strip()
     receipt_date = receipt_id_and_datetime.split(" ")[1].strip()
     datetime_object = datetime.strptime(receipt_date, '%m.%d.%Y')
+
+    """ Get username from blob metadata """
+    # Instantiates a client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(PROCESSED_BUCKET_NAME)
+    blob = bucket.get_blob(file_name)
+    metadata = blob.metadata
+
+    if(metadata):
+        user_name = blob.metadata["uploaded_by"]
 
     """ Write result to DB """
     writeToDatastore(articles_querified, user_name, datetime_object, receipt_id)
@@ -392,7 +406,9 @@ def fetch_item_category(item_name):
 
 
 def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
-    """
+    """ Writes the arcitles to the datastore. On the way, look up the category
+        mapping if this item has been categorized before. If not found, it will
+        be created with an id of -1, so that it can be updated later
     :param articles_querified: list of text strings containing article text and price
     :return: none
     """
@@ -409,6 +425,8 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
         if debug:
             print("Assignning category {} to item {}".format(category_id, item))
 
+        # Only happens if we have not seen this item before. Then we add it to
+        # unmapped items with an id of -1.
         if category_id == 0:
             cat_task_key = datastore_client.key(DATASTORE_KIND_CATEGORY_ASSIGNMENT, item)
             cat_task = datastore.Entity(key=cat_task_key)
@@ -438,5 +456,7 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
 
         # Saves the entity
         datastore_client.put(task)
+        # Can store multiple items at once with
+        # client.put_multi([task1, task2])
 
         print('Saved {}: {}'.format(task.key.name, task['item_name']))
