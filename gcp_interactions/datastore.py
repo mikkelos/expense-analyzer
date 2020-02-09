@@ -1,9 +1,10 @@
+# import os
+from datetime import datetime
 
 # Imports the Google Cloud client library
-import os
 from google.cloud import datastore
 from google.cloud import storage
-from google.oauth2 import service_account
+# from google.oauth2 import service_account
 
 """ CONSTANTS """
 # STORAGE BUCKET NAMES
@@ -46,15 +47,20 @@ datastore_client = datastore.Client()
 
 def upload_blob(file, user):
     """ Uploads a file to the bucket."""
+    """
     if local_run:
         storage_client = storage.Client(
             credentials=credentials
         )
     else:
         storage_client = storage.Client()
-
+    """
+    storage_client = storage.Client()
     bucket = storage_client.bucket(UNPROCESSED_BUCKET_NAME)
-    blob = bucket.blob(file.filename)
+    now = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    destination_blob_name = "image" + now
+
+    blob = bucket.blob(destination_blob_name)
 
     # Add the uploading user to the metadata
     metadata = {"uploaded_by": user}
@@ -63,7 +69,7 @@ def upload_blob(file, user):
     # Upload file
     blob.upload_from_file(file)
 
-    print('Blob {} uploadted to bucket {}.'.format(
+    print('Blob {} uploaded to bucket {}.'.format(
         file.filename,
         bucket.name
         ))
