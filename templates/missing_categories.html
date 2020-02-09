@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <title>Expense Analyzer - Item classification</title>
+</head>
+<body>
+
+<!-- Variables to send in:
+  item_list:
+  category_dict:
+  main_category_dict:
+-->
+
+<div>
+Please find the most appropriate categories for the displayed items. If you are unsure of one, you can
+just leave it as -1
+</div>
+
+{% if item_list %}
+  <form action="/assignCategories" method="post">
+    <table>
+      <tr>
+        <th> Item </th>
+        {# <th> Main category </th> #}
+        <th> Category </th>
+      </tr>
+
+      {% for item in item_list %}
+      <tr>
+        <td> <input type="text" name='item{{loop.index}}' value='{{item}}'</td>
+        <!-- <td> <input type="text" name="item1"> </td> -->
+        {#
+        <td>
+          <select name="mainCategory{{loop.index}}">
+            {% for category in category_dict.keys()%}
+            <option value={{category}}>{{category}} - {{category_dict[category]}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        #}
+
+        <td>
+          <select name="category{{loop.index}}">
+            {% for category in category_dict.keys()%}
+            <option value={{category}}>{{category}} - {{category_dict[category]}}</option>
+            {% endfor %}
+          </select></td>
+        <td> </td>
+        <td> </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <br>
+    <input type="submit" value="Submit">
+  </form>
+
+  <h3> The main categories are organized according to:</h3>
+  <div>
+    <ul class=main_categories_help>
+      {% for category in main_category_dict %}
+      <li>{{category}} - {{main_category_dict[category]}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+{% else %}
+  <h3> Thanks for contributing to our brilliant classification system! </h3>
+  <span> We have taken carefully note of your submission and added it to our backend systems </span>
+  <br>
+  What do you want to to now?
+  <br>
+  <br>
+  <button onclick="location.href = 'upload'">Head back to the main menu</button>
+  <button type="button" onclick="location.href='assignCategories'">Classify another 10</button>
+  <br>
+{% endif %}
+
+</body>
+</html>
