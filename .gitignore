@@ -2,6 +2,7 @@
 # Data and image files
 test_images/
 data/
+archive
 
 # Test files
 test*
