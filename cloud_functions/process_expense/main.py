@@ -514,13 +514,13 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
         task = datastore.Entity(key=task_key)
         task['added_by'] = added_by
         task['cat_id'] = category_id
-        task['discount_amt'] = article.get("discount_amt", 0)
-        task['discount_type'] = article.get("discount_type", 0)
         task['item_id'] = 0  # Missing
         task['item_name'] = item
         task['price_gross'] = article.get("price_gross", 0)
         task['price_net'] = article.get("price_net", 0)
         task["item_count"] = article.get("item_count", 0)
+        task['discount_amt'] = article.get("discount_amt", 0)
+        task['discount_type'] = article.get("discount_type", 0)
         task["unit_price_net"] = article.get("unit_price_net", 0)
         task['registered_datetime'] = now
         task['trans_date'] = trans_datetime
