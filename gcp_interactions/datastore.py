@@ -123,15 +123,21 @@ def get_main_categories(categories):
 
 def update_item_category(updates):
     """ Does a bulk update of item-category mappings
-    :param updates (dict): key: partial key to the item name, value: new category
+    :param updates (dict): key: partial key to the item name, value: new category (int)
     """
 
     # {'avokado modnet 2pk': 804}
     for item in updates:
         key = datastore_client.key('category_item_mapping', item)
         task = datastore_client.get(key)
-        task["cat_id"] = updates[item]
-        datastore_client.put(task)
+
+        new_id = updates[item]
+        if new_id.isnumeric():
+            new_id = int(new_id)
+            task["cat_id"] = new_id
+            datastore_client.put(task)
+        else:
+            print("Found an error in datastore.py > update_item_category. Non-numeric category id")
 
 
 def upload_categories():
