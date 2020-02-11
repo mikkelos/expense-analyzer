@@ -37,6 +37,7 @@ user_name = "testuser"
 debug = False
 developing = True
 local_run = False
+
 """
 # Only used in dev environment
 key_path = "/Volumes/GoogleDrive/My Drive/00. My Documents/03. Internt/24. Expense analyzer/config_files/expense-analyzer-260008-0cac2ecd3671.json"
@@ -49,9 +50,12 @@ credentials = service_account.Credentials.from_service_account_file(
 datastore_client = datastore.Client(
     credentials=credentials
 )
+vision_client = vision.ImageAnnotatorClient(
+    credentials=credentials
+)
 # vision_client = vision.ImageAnnotatorClient.from_service_account_json(key_path)
-"""
 
+"""
 datastore_client = datastore.Client()
 vision_client = vision.ImageAnnotatorClient()
 
@@ -328,7 +332,15 @@ def lines_to_text(receipt_lines):
 def query_preparation(receipt_text):
     """
     :param receipt_text: list of text strings containing article text and price
-    :return: a list of multiple tuples, consisting of article type, text and price
+    :return: a list of dict line items, with keys:
+            item_name: The full item name
+            item_count: The number of items
+            type:
+            price_gross: The total price before discount
+            price_net: The total price after discount
+            unit_price_net: The unit price after dicount
+            discount_amt: The total discount
+            discount_type: Percentage, fixed, mix and match, etc
     """
 
     """
@@ -339,8 +351,9 @@ def query_preparation(receipt_text):
         "$" at the end of the line
     """
     price_pattern = "(\d+.\d+)$"
-    discont_pattern = ""
     articles_querified = []
+
+    curr_item_line = {}
 
     for article in receipt_text:
         if debug:
@@ -351,17 +364,42 @@ def query_preparation(receipt_text):
             # TODO: x = re.spltt(discount_pattern, article)
             # articles.append(["discount", x[0], x[1]])
 
-            # A line starting with "Rabatt" belongs to the line before.
-            if developing:
+            discount_line = article.split(" ")
+            # Will have the structure: ['rabatt:', 'nok', '13.16', '(40%', 'av', '32.90)']
+
+            if len(discount_line) >= 3:
+                discount_amt = discount_line[2]
+
+                # A line starting with "Rabatt" belongs to the last item identified
+                curr_item_line["discount_amt"] = discount_amt
+                curr_item_line["discount_type"] = "percentage"
+            else:
+                print("Found an unknown discount format".format(article))
+
+            if debug:
                 print("Found a discount line")
                 print(article.split(" "))
 
-        elif "antall" in receipt_text:
+        elif "antall" in article:
             # Do something TODO
-            if developing:
-                print("jadajada")
+
+            antall_line = article.split(" ")
+            # Will have the structure: ['antall:', '2', 'stk', '1.60', 'kr/stk']
+
+            if len(discount_line) >= 4:
+                item_count = antall_line[1]
+                unit_price_net = antall_line[3]
+
+                # A line starting with "antall" belongs to the last item identified
+                curr_item_line["item_count"] = item_count
+                curr_item_line["unit_price_net"] = unit_price_net
+
+            if debug:
+                print("Found a antall line")
+                print(article.split(" "))
 
         elif "artikler" not in article:
+            curr_item_line = {}
             x = re.split(price_pattern, article, 2)
 
             # Element 3, index 2, is always empty string
@@ -369,7 +407,14 @@ def query_preparation(receipt_text):
                 # actual article
                 item = x[0].strip()
                 price = x[1].strip()
-                articles_querified.append([item, price])
+
+                curr_item_line["item_name"] = item
+                curr_item_line["price_net"] = price
+                curr_item_line["price_gross"] = price
+                curr_item_line["unit_price_net"] = price
+                curr_item_line["item_count"] = 1
+
+                articles_querified.append(curr_item_line)
                 if debug:
                     print("len was 3")
                     print("Appending item '{}' with price '{}'. Full split is '{}'".format(item, price, x))
@@ -380,6 +425,27 @@ def query_preparation(receipt_text):
         else:
             if developing:
                 print("Unparsable line 2: {}".format(article))
+
+    # Finally, iterate through the set of lines and update fields that are calculated by discounts
+    for article in articles_querified:
+        if "discount_amt" in article and "price_net" in article:
+
+            discount = article.get("discount_amt").strip()
+            price_net = article.get("price_net").strip()
+
+            # Try convert to floats
+            try:
+                discount = float(discount)
+                price_net = float(price_net)
+                float_success = True
+            except ValueError:
+                float_success = False
+                print("Unable to parse either {} or {}".format(discount, price_net))
+
+            # Add discount to calculate gross price. Check parsability
+            if float_success:
+                article["price_gross"] = str(round((discount + price_net)*100)/100)
+
     return articles_querified
 
 
@@ -409,18 +475,25 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
     """ Writes the arcitles to the datastore. On the way, look up the category
         mapping if this item has been categorized before. If not found, it will
         be created with an id of -1, so that it can be updated later
-    :param articles_querified: list of text strings containing article text and price
+    :param articles_querified: list of dict possibly containing the following keys:
+        item_name: The full item name
+        item_count: The number of items
+        price_gross: The total price before discount
+        price_net: The total price after discount
+        unit_price_net: The unit price after dicount
+        discount_amt: The total discount
+        discount_type: Percentage, fixed, mix and match, etc
     :return: none
     """
 
     kind = 'transaction'  # The kind for the new entity
     now = datetime.now()  # Registered datetime
+
+    task_list = []        # Used for bulk upload to datastore
+
     # Loop over all articles and insert one by one
     for article in articles_querified:
-        # article = articles_querified[0]
-        item = article[0]
-        price = article[1]
-
+        item = article.get("item_name", 0)
         category_id = fetch_item_category(item)
         if debug:
             print("Assignning category {} to item {}".format(category_id, item))
@@ -441,12 +514,14 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
         task = datastore.Entity(key=task_key)
         task['added_by'] = added_by
         task['cat_id'] = category_id
-        task['discount_amt'] = 0  # Missing
-        task['discount_type'] = 0  # Missing
+        task['discount_amt'] = article.get("discount_amt", 0)
+        task['discount_type'] = article.get("discount_type", 0)
         task['item_id'] = 0  # Missing
         task['item_name'] = item
-        task['price_gross'] = 0  # Missing
-        task['price_net'] = price
+        task['price_gross'] = article.get("price_gross", 0)
+        task['price_net'] = article.get("price_net", 0)
+        task["item_count"] = article.get("item_count", 0)
+        task["unit_price_net"] = article.get("unit_price_net", 0)
         task['registered_datetime'] = now
         task['trans_date'] = trans_datetime
         task['receipt_id'] = receipt_id
@@ -454,9 +529,12 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
         if debug:
             print("Writting to datastore:", task)
 
-        # Saves the entity
-        datastore_client.put(task)
-        # Can store multiple items at once with
-        # client.put_multi([task1, task2])
+        # Saves a single entity:
+        # datastore_client.put(task)
+        task_list.append(task)
+        print('Added {}: {}'.format(task.key.name, task['item_name']))
 
-        print('Saved {}: {}'.format(task.key.name, task['item_name']))
+        # End for loop
+
+    # Saves multiple entities at once:
+    datastore_client.put_multi(task_list)
