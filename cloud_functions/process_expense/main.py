@@ -32,8 +32,6 @@ OVERLAPPING_ALLOCATION_THRESHOLD = 0.3
 # The entity kind in datastore to query to find previous assignments
 DATASTORE_KIND_CATEGORY_ASSIGNMENT = "category_item_mapping"
 
-user_name = "testuser"
-
 debug = False
 developing = True
 local_run = False
@@ -97,7 +95,7 @@ def gcs_trigger(data, context):
     """ Extract the receipt id and datetime before saving to datastore """
     receipt_id = receipt_id_and_datetime.split(" ")[0].strip()
     receipt_date = receipt_id_and_datetime.split(" ")[1].strip()
-    datetime_object = datetime.strptime(receipt_date, '%m.%d.%Y')
+    datetime_object = datetime.strptime(receipt_date, '%d.%m.%Y')
 
     """ Get username from blob metadata """
     # Instantiates a client
@@ -105,6 +103,8 @@ def gcs_trigger(data, context):
     bucket = storage_client.bucket(PROCESSED_BUCKET_NAME)
     blob = bucket.get_blob(file_name)
     metadata = blob.metadata
+
+    user_name = "Not registered"
 
     if(metadata):
         user_name = blob.metadata["uploaded_by"]
@@ -386,7 +386,7 @@ def query_preparation(receipt_text):
             antall_line = article.split(" ")
             # Will have the structure: ['antall:', '2', 'stk', '1.60', 'kr/stk']
 
-            if len(discount_line) >= 4:
+            if len(antall_line) >= 4:
                 item_count = antall_line[1]
                 unit_price_net = antall_line[3]
 
