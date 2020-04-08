@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Utility admin functions</title>
+</head>
+<body>
+{% include 'navigationBar.html' %}
+<h1>Use the options below to interact with the GCP project </h1>
+
+<div> <h3> Update all transactions with missing category IDs </h3>
+<input type="submit" value="Update" onclick="submit()">
+</div>
+
+<script type="text/javascript">
+    function submit() {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                alert("Function returned: " + xhr.response);
+            }
+        }
+        xhr.open('get', 'https://europe-west1-expense-analyzer-260008.cloudfunctions.net/update_transaction_categories', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        xhr.send();
+    }
+
+</script>
+
+</body>
+</html>
