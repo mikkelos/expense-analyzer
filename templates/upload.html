@@ -7,6 +7,7 @@
   <title>Title</title>
 </head>
 <body>
+{% include 'navigationBar.html' %}
 <h1>Expense Analyzer</h1>
 <form action="/uploadImageToBucket" method=post enctype=multipart/form-data>
   Upload image: <input type="file" name="input_image" accept="image/*">
