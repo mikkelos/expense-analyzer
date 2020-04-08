@@ -11,7 +11,7 @@ DATASTORE_KIND_TRANSACTIONS = "transaction"
 DATASTORE_KIND_MAPPING = "category_item_mapping"
 
 
-def update_transaction_categories():
+def update_transaction_categories(request):
     """ Runs the functions in order """
 
     """ Use this when deployed on google cloud """
