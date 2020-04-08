@@ -23,7 +23,7 @@ def update_transaction_categories():
 
     bulk_update(datastore_client, trans_with_new_cat)
 
-    return 1
+    return "Updated " + str(len(trans_with_new_cat)) + " entities"
 
 
 def get_transactions_without_category(datastore_client):
