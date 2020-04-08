@@ -1,0 +1,4 @@
+google-api-core==1.14.2
+google-auth==1.6.3
+google-cloud-core==1.0.3
+google-cloud-datastore==1.10.0

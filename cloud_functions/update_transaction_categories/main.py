@@ -3,6 +3,7 @@ gcloud functions deploy update_transaction_categories --region europe-west1 --ru
 """
 import os
 
+# Imports the Google Cloud client library
 from google.cloud import datastore
 from google.oauth2 import service_account
 
