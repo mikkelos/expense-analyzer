@@ -1,0 +1,55 @@
+<html>
+    <head>
+      <script src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
+
+      <!-- TODO: Add SDKs for Firebase products that you want to use
+           https://firebase.google.com/docs/web/setup#config-web-app -->
+      <script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
+
+      <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+          apiKey: "AIzaSyAfeYX2LU7mNDxfupyeMCb0HmJ1MCO4KqQ",
+          authDomain: "expense-analyzer-260008.firebaseapp.com",
+          databaseURL: "https://expense-analyzer-260008.firebaseio.com",
+          projectId: "expense-analyzer-260008",
+          storageBucket: "expense-analyzer-260008.appspot.com",
+          messagingSenderId: "438670908109",
+          appId: "1:438670908109:web:4cb0e83043cbe89ac82784"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get the Auth service for the default app
+        var defaultAuth = firebase.auth();
+
+        firebase.auth().onAuthStateChanged(
+          function(user) {
+            if (user) {
+              var name = user.displayName;
+              console.log(user);
+              /* If the provider gives a display name, use the name for the
+              personal welcome message. Otherwise, use the user's email. */
+              var welcomeName = name ? name : user.email;
+              console.log(welcomeName);
+              // document.getElementById('user').value = welcomeName;
+            } else {
+              console.log("No user found, redirecting")
+              window.location.replace("/");
+            }
+        });
+
+      </script>
+    </head>
+<!--
+Make sure that your cookie library also sets the SameSite=strict cookie flag (to prevent CSRF attacks),
+as well as the secure=true flag (to ensure cookies can only be set over an encrypted connection).
+
+Each time a user makes a request to your site,
+use their session ID (extracted from the cookie they send to you) to retrieve
+their account details from either a database or a cache (depending on how large your website is)
+
+Once you have the user's account info pulled up and verified,
+feel free to pull any associated sensitive data along with it
+  -->
+</html>
