@@ -75,46 +75,7 @@ just leave it as -1
   <br>
 {% endif %}
 
-<script src="https://www.gstatic.com/firebasejs/6.6.2/firebase-app.js"></script>
-
-<!-- TODO: Add SDKs for Firebase products that you want to use
-     https://firebase.google.com/docs/web/setup#config-web-app -->
-<script src="https://www.gstatic.com/firebasejs/6.6.1/firebase-auth.js"></script>
-
-<script>
-  // Your web app's Firebase configuration
-  var firebaseConfig = {
-    apiKey: "AIzaSyAfeYX2LU7mNDxfupyeMCb0HmJ1MCO4KqQ",
-    authDomain: "expense-analyzer-260008.firebaseapp.com",
-    databaseURL: "https://expense-analyzer-260008.firebaseio.com",
-    projectId: "expense-analyzer-260008",
-    storageBucket: "expense-analyzer-260008.appspot.com",
-    messagingSenderId: "438670908109",
-    appId: "1:438670908109:web:4cb0e83043cbe89ac82784"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-
-  // Get the Auth service for the default app
-  var defaultAuth = firebase.auth();
-
-  firebase.auth().onAuthStateChanged(
-    function(user) {
-      if (user) {
-        var name = user.displayName;
-        console.log(user);
-        /* If the provider gives a display name, use the name for the
-        personal welcome message. Otherwise, use the user's email. */
-        var welcomeName = name ? name : user.email;
-        console.log(welcomeName);
-        // document.getElementById('user').value = welcomeName;
-      } else {
-        console.log("No user found, redirecting")
-        window.location.replace("/");
-      }
-  });
-
-</script>
+{% include 'check_user.html' %}
 
 </body>
 </html>
