@@ -216,6 +216,11 @@ def assignCategories():
         return render_template("missing_categories.html")
 
 
+@app.route('/utilityFunctions', methods=['GET'])
+def utilityFunctions():
+    return render_template("utilityFunctions.html")
+
+
 @app.route("/getExpenses", methods=["GET"])
 def getExpenses():
     """ Returns expenses from the DB."""
