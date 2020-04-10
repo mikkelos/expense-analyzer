@@ -1,9 +1,11 @@
-# import os
+import os
 from datetime import datetime
 
 # Imports the Google Cloud client library
 from google.cloud import datastore
 from google.cloud import storage
+
+# This is only used locally:
 # from google.oauth2 import service_account
 
 """ CONSTANTS """
@@ -25,8 +27,9 @@ debug = False
 developing = True
 local_run = False
 
-"""
+
 # This is only used for local development:
+"""
 key_path = "/Volumes/GoogleDrive/My Drive/00. My Documents/03. Internt/24. Expense analyzer/config_files/expense-analyzer-260008-0cac2ecd3671.json"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 credentials = service_account.Credentials.from_service_account_file(
@@ -39,6 +42,7 @@ datastore_client = datastore.Client(
 )
 """
 
+# This is used for GCP deployment
 datastore_client = datastore.Client()
 
 
