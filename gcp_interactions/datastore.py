@@ -6,7 +6,7 @@ from google.cloud import datastore
 from google.cloud import storage
 
 # This is only used locally:
-# from google.oauth2 import service_account
+from google.oauth2 import service_account
 
 """ CONSTANTS """
 # STORAGE BUCKET NAMES
@@ -20,6 +20,7 @@ OVERLAPPING_ALLOCATION_THRESHOLD = 0.3
 # The entity kind in datastore to query to find previous assignments
 DATASTORE_KIND_CATEGORY_ASSIGNMENT = "category_item_mapping"
 DATASTORE_KIND_CATEGORIES = "category"
+DATASTORE_KIND_TRANSACTIONS = "transaction"
 
 """ SESSION VARIABLES """
 
@@ -29,7 +30,7 @@ local_run = False
 
 
 # This is only used for local development:
-"""
+
 key_path = "/Volumes/GoogleDrive/My Drive/00. My Documents/03. Internt/24. Expense analyzer/config_files/expense-analyzer-260008-0cac2ecd3671.json"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
 credentials = service_account.Credentials.from_service_account_file(
@@ -41,9 +42,10 @@ datastore_client = datastore.Client(
     credentials=credentials
 )
 """
+"""
 
 # This is used for GCP deployment
-datastore_client = datastore.Client()
+#datastore_client = datastore.Client()
 
 
 """ STORAGE BUCKET """
@@ -132,7 +134,7 @@ def update_item_category(updates):
 
     # {'avokado modnet 2pk': 804}
     for item in updates:
-        key = datastore_client.key('category_item_mapping', item)
+        key = datastore_client.key(DATASTORE_KIND_CATEGORY_ASSIGNMENT, item)
         task = datastore_client.get(key)
 
         new_id = updates[item]
@@ -142,6 +144,22 @@ def update_item_category(updates):
             datastore_client.put(task)
         else:
             print("Found an error in datastore.py > update_item_category. Non-numeric category id")
+
+
+def get_all_entities_from_kind_as_df(entity_kind):
+    """
+    Gets all transactions for a given kind
+    Returns: pandas.DataFrame
+    """
+    import pandas as pd
+    query = datastore_client.query(kind=entity_kind)
+    q_result = query.fetch()
+
+    df = pd.DataFrame(q_result)
+
+    # TODO, make sure keys are also included
+
+    return df
 
 
 def upload_categories():
