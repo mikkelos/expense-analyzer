@@ -45,20 +45,24 @@ firebaseConfig = {
 
 
 def allowed_file(filename):
+    # Used for testing
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def validate_user(req):
+    # Used for testing
     return 1
 
 
 @app.route("/index", methods=["GET"])
+# Used for testing
 def test():
     return render_template("index.html")
 
 
 @app.route('/loggedIn', methods=["GET"])
+# Used for testing
 def authorize():
     user = {'username': 'Mikkel'}
     return render_template("check_user.html", title="test_user", user=user)
@@ -98,6 +102,7 @@ def hello():
 
 
 def has_token(headers):
+    # Used for testing
     """ Determined if header contains authorization token
 
     params:
@@ -116,6 +121,7 @@ def upload():
 
 @app.route("/uploadImageToBucket", methods=["GET", "POST"])
 def uploadImageToBucket():
+    # Called from upload.htlm. Main upload entrypoint
     print("READY TO UPLOAD FILE")
 
     # Check the file input type
@@ -147,6 +153,7 @@ def uploadImageToBucket():
         <!doctype html>
         <html>
         <body>
+        {% include 'navigationBar.html' %}
         This is a long text to test if data is passed correctly.
         <br>
         The store selected was {} and the file was called {}
@@ -218,11 +225,25 @@ def assignCategories():
 
 @app.route('/utilityFunctions', methods=['GET'])
 def utilityFunctions():
+    """ Collection of utility functions, e.g. to trigger GCP functions """
     return render_template("utilityFunctions.html")
+
+
+@app.route('/analytics', methods=['GET'])
+def analytics():
+    """ Main page for analysis of expenditures """
+    return render_template("analytics.html")
+
+
+@app.route('/history', methods=['GET'])
+def history():
+    """ Main page for overview of receipts """
+    return render_template("history.html")
 
 
 @app.route("/getExpenses", methods=["GET"])
 def getExpenses():
+    # Used for testing
     """ Returns expenses from the DB."""
     print("ON getExpense ROUTE!")
     print("Headers: ", request.headers)
@@ -251,6 +272,7 @@ def getExpenses():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Used for testing
     error = None
     if request.method == 'POST':
         if request.form['username'] != 'admin' or \
