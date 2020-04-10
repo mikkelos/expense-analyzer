@@ -10,5 +10,32 @@
 {% include 'check_user.html' %}
 <h1>Here is a an overview of your main expenditures </h1>
 
+{% if not expense_by_main_cat.empty %}
+    <table>
+      <tr>
+        <th> Year </th>
+        <th> Month </th>
+        <th> Main category </th>
+        <th> Sum - Gross </th>
+        <th> Sum - Net </th>
+        <th> Sum - Discount </th>
+        <th> Sum - Items </th>
+      </tr>
+
+      {% for key,value in expense_by_main_cat.iterrows() %}
+      <tr>
+        <td> {{value["trans_year"]}} </td>
+        <td> {{value["trans_month"]}} </td>
+        <td> {{value["main_cat"]}} </td>
+        <td> {{value["price_gross"]}} </td>
+        <td> {{value["price_net"]}} </td>
+        <td> {{value["item_count"]}} </td>
+        <td> {{value["discount_amt"]}} </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <br>
+{% endif %}
+
 </body>
 </html>

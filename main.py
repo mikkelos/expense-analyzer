@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 # from firebase_admin import auth
 
 import os
+import pandas as pd
 # from os.path import join, dirname
 # from dotenv import load_dotenv
 
@@ -16,8 +17,19 @@ from gcp_interactions.datastore import (
     get_missing_category,
     get_all_categories,
     get_main_categories,
-    update_item_category
+    update_item_category,
+    get_all_entities_from_kind_as_df
     )
+
+# Import analytics utilityFunctions
+from scripts.analytics import (
+    expenses_by_level
+    )
+
+# Define CONSTANTS
+DATASTORE_KIND_CATEGORY_ASSIGNMENT = "category_item_mapping"
+DATASTORE_KIND_CATEGORIES = "category"
+DATASTORE_KIND_TRANSACTIONS = "transaction"
 
 # dotenv_path = join(dirname(__file__), '.env')
 # load_dotenv(dotenv_path)
@@ -232,7 +244,13 @@ def utilityFunctions():
 @app.route('/analytics', methods=['GET'])
 def analytics():
     """ Main page for analysis of expenditures """
-    return render_template("analytics.html")
+
+    transactions = get_all_entities_from_kind_as_df(DATASTORE_KIND_TRANSACTIONS)
+    expense_by_main_cat = expenses_by_level(transactions, 2)
+    expense_by_main_cat = expense_by_main_cat.reset_index()
+
+    return render_template("analytics.html",
+                           expense_by_main_cat=expense_by_main_cat)
 
 
 @app.route('/history', methods=['GET'])
