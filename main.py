@@ -165,7 +165,6 @@ def uploadImageToBucket():
         <!doctype html>
         <html>
         <body>
-        {% include 'navigationBar.html' %}
         This is a long text to test if data is passed correctly.
         <br>
         The store selected was {} and the file was called {}
