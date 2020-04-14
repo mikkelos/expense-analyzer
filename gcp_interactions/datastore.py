@@ -51,8 +51,13 @@ datastore_client = datastore.Client()
 """ STORAGE BUCKET """
 
 
-def upload_blob(file, user):
-    """ Uploads a file to the bucket."""
+def upload_blob(file, user, store_name):
+    """ Uploads a file to the bucket.
+        params:
+            file (blob): file to upload
+            user (str): name of user that uploaded file
+            store_name (str): name of the store of the receipt
+    """
     """
     if local_run:
         storage_client = storage.Client(
@@ -69,7 +74,7 @@ def upload_blob(file, user):
     blob = bucket.blob(destination_blob_name)
 
     # Add the uploading user to the metadata
-    metadata = {"uploaded_by": user}
+    metadata = {"uploaded_by": user, "store_name": store_name}
     blob.metadata = metadata
 
     # Upload file

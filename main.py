@@ -148,8 +148,11 @@ def uploadImageToBucket():
                 <br>
                 </body>
                 </html>'''
+        # Fetch data from upload input form
         file = request.files['input_image']
         user = request.form["user"]
+        store_name = request.form["store_name"]
+
         # if user does not select file, browser also submit an empty part without filename
         if file.filename == '':
             print('No selected file')
@@ -159,7 +162,7 @@ def uploadImageToBucket():
             filename = secure_filename(file.filename)
 
         # Save file to DataStore!
-        upload_blob(file, user)
+        upload_blob(file, user, store_name)
 
         return '''
         <!doctype html>
@@ -170,7 +173,7 @@ def uploadImageToBucket():
         The store selected was {} and the file was called {}
         </body>
         </html>
-        '''.format(request.form["store_name"], filename)
+        '''.format(store_name, filename)
     else:
         return '''<!doctype html>
             <html>
