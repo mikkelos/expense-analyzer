@@ -70,6 +70,7 @@ def gcs_trigger(data, context):
     """
 
     file_name = data['name']
+    time_created = data['timeCreated']
 
     print('Event ID: {}'.format(context.event_id))
     print('Event type: {}'.format(context.event_type))
@@ -110,7 +111,7 @@ def gcs_trigger(data, context):
         user_name = blob.metadata["uploaded_by"]
 
     """ Write result to DB """
-    writeToDatastore(articles_querified, user_name, datetime_object, receipt_id)
+    writeToDatastore(articles_querified, user_name, datetime_object, receipt_id, file_name)
 
 
 def change_storage_bucket(bucket_name, blob_name, new_bucket_name, new_blob_name):
@@ -471,7 +472,7 @@ def fetch_item_category(item_name):
     return category_id
 
 
-def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
+def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id, file_name):
     """ Writes the arcitles to the datastore. On the way, look up the category
         mapping if this item has been categorized before. If not found, it will
         be created with an id of -1, so that it can be updated later
@@ -487,7 +488,7 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
     """
 
     kind = 'transaction'  # The kind for the new entity
-    now = datetime.now()  # Registered datetime
+    now = datetime.now()  # Registered datetime. Replaced by line below
 
     task_list = []        # Used for bulk upload to datastore
 
@@ -523,6 +524,7 @@ def writeToDatastore(articles_querified, added_by, trans_datetime, receipt_id):
         task['discount_type'] = article.get("discount_type", 0)
         task["unit_price_net"] = article.get("unit_price_net", 0)
         task['registered_datetime'] = now
+        task['source_file_name'] = file_name
         task['trans_date'] = trans_datetime
         task['receipt_id'] = receipt_id
 
