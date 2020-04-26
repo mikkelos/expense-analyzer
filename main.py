@@ -23,7 +23,8 @@ from gcp_interactions.datastore import (
 
 # Import analytics utilityFunctions
 from scripts.analytics import (
-    expenses_by_level
+    expenses_by_level,
+    expenses_by_month
     )
 
 # Define CONSTANTS
@@ -251,8 +252,16 @@ def analytics():
     expense_by_main_cat = expenses_by_level(transactions, 2)
     expense_by_main_cat = expense_by_main_cat.reset_index()
 
+    expense_by_month = expenses_by_month(transactions, num_months_back=12)
+    expense_by_month = expense_by_month.reset_index()
+
+    import datetime
+    mydate = datetime.datetime.now()
+    mydate.strftime("%B")
+
     return render_template("analytics.html",
-                           expense_by_main_cat=expense_by_main_cat)
+                           expense_by_main_cat=expense_by_main_cat,
+                           expense_by_month=expense_by_month.to_json())
 
 
 @app.route('/history', methods=['GET'])
