@@ -1,14 +1,34 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en-US">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics page</title>
+
+  <script>
+
+  </script>
 </head>
 <body>
+
 {% include 'navigationBar.html' %}
 {% include 'check_user.html' %}
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
 <h1>Here is a an overview of your main expenditures </h1>
+<div>
+  <div id="spend_by_month"></div>
+</div>
+
+<div id="spend_by_category"></div>
+
+<div id="spend_by_month"></div>
+<div id="spend_by_month_item_details"></div>
+
+<div id="trending_items"></div>
+
+<div id="spend_by_store"></div>
 
 {% if not expense_by_main_cat.empty %}
     <table>
@@ -36,6 +56,59 @@
     </table>
     <br>
 {% endif %}
+
+  <script>
+  (function() {
+    document.cookie = "SameSite=None; Secure; path=/";
+
+    var x = document.cookie;
+  })();
+
+  </script>
+
+  <script>
+  // Load variables from backend
+  var expenseByMonth = JSON.parse({{ expense_by_month|tojson }});
+  </script>
+
+  <script type="text/javascript">
+    // Load google charts
+    google.charts.load('current', {'packages':['corechart']});
+
+    google.charts.setOnLoadCallback(drawColumnChart);
+    // Draw the chart and set the chart values
+    function drawColumnChart() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Month');
+      data.addColumn('number', 'Spend per Month');
+
+      // Add rows to table
+      var count = Object.keys(expenseByMonth["trans_month_short"]).length;
+      for (var i = 0; i < count; i++){
+        var month = expenseByMonth["trans_month_short"][i];
+        console.log(i);
+        var spend = expenseByMonth["price_gross"][i];
+        data.addRows([[month, spend]]);
+      }
+
+      var options = {
+        title: "Spend per month",
+        width: 800,
+        height: 400,
+        bar: {groupWidth: "90%"},
+        legend: { position: "none" },
+        vAxes: {
+          0: {baseline: 0}
+        }
+      };
+
+      // Display the chart inside the <div> element
+      var chart = new google.visualization.ColumnChart(document.getElementById("spend_by_month"));
+      chart.draw(data, options);
+    }
+
+
+  </script>
 
 </body>
 </html>
