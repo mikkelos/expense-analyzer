@@ -103,8 +103,33 @@
       };
 
       // Display the chart inside the <div> element
-      var chart = new google.visualization.ColumnChart(document.getElementById("spend_by_month"));
-      chart.draw(data, options);
+      var chart1 = new google.visualization.ColumnChart(document.getElementById("spend_by_month"));
+      chart1.draw(data, options);
+
+      // Every time the chart fires the "select" event, it should call your selectHandler() function.
+      google.visualization.events.addListener(chart1, 'select', chart1SelectHandler);
+
+      //function chart1SelectHandler(e) {
+      function chart1SelectHandler() {
+        var selection = chart1.getSelection();
+        var message = '';
+
+        for (var i = 0; i < selection.length; i++) {
+          var item = selection[i];
+          if (item.row != null && item.column != null) {
+            var str = data.getFormattedValue(item.row, item.column);
+            message += '{row:' + item.row + ',column:' + item.column + '} = ' + str + '\n';
+          } else if (item.row != null) {
+            var str = data.getFormattedValue(item.row, 0);
+            message += '{row:' + item.row + ', column:none}; value (col 0) = ' + str + '\n';
+          } else if (item.column != null) {
+            var str = data.getFormattedValue(0, item.column);
+            message += '{row:none, column:' + item.column + '}; value (row 0) = ' + str + '\n';
+          }
+        }
+
+        alert('A table row was selected! Selection: '+ message);
+      }
     }
 
 
