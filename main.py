@@ -27,7 +27,8 @@ from scripts.analytics import (
     prepare_expenses,
     expenses_by_level_and_month,
     expenses_by_month,
-    expenses_changes_since_prev
+    expenses_changes_since_prev,
+    add_category_names
     )
 
 # Define CONSTANTS
@@ -261,7 +262,16 @@ def analytics():
     expense_by_month = expense_by_month.reset_index()
 
     expenses_main_cat_with_changes = expenses_changes_since_prev(expense_by_main_cat, "main_cat")
-    print(expenses_main_cat_with_changes)
+
+    # Rename first column to be able to join with category mapping
+    expenses_main_cat_with_changes = expenses_main_cat_with_changes.rename(columns={'main_cat': 'cat_id'})
+
+    # Read categories as dataframe and format cat_id as int
+    all_categories = get_all_categories()
+    all_categories = pd.DataFrame(all_categories.items())
+    all_categories.columns = ["cat_id", "cat_name"]
+
+    expenses_main_cat_with_changes = add_category_names(expenses_main_cat_with_changes, all_categories)
 
     mydate = datetime.datetime.now()
     mydate.strftime("%B")
