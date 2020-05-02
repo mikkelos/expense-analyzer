@@ -206,12 +206,20 @@ def assignCategories():
         all_categories = get_all_categories()
         all_main_categories = get_main_categories(all_categories)
 
+        # Remove the main categories
+        categories_to_hide = get_main_categories(all_categories)
+
+        # These two special keys should not be hidden
+        categories_to_hide.pop(-1, None)
+        categories_to_hide.pop(0, None)
+
+        # Remove keys which should not be part of drop-down table
+        for remove_key in categories_to_hide:
+            all_categories.pop(remove_key, None)
+
         # Return the list of items in a tabular format
-
         # Await feedback from user. Make a way to search in the categories
-
         # Iterate through the user feedback and write back to the datastore
-
         # Give the user two choices: 10 more, go back
         return render_template("missing_categories.html",
                                item_list=item_names_without_category,
