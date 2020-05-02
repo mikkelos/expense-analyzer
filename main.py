@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 
 import os
 import pandas as pd
+import datetime
 # from os.path import join, dirname
 # from dotenv import load_dotenv
 
@@ -23,8 +24,10 @@ from gcp_interactions.datastore import (
 
 # Import analytics utilityFunctions
 from scripts.analytics import (
-    expenses_by_level,
-    expenses_by_month
+    prepare_expenses,
+    expenses_by_level_and_month,
+    expenses_by_month,
+    expenses_changes_since_prev
     )
 
 # Define CONSTANTS
@@ -249,19 +252,24 @@ def analytics():
     """ Main page for analysis of expenditures """
 
     transactions = get_all_entities_from_kind_as_df(DATASTORE_KIND_TRANSACTIONS)
-    expense_by_main_cat = expenses_by_level(transactions, 2)
+    transactions = prepare_expenses(transactions)
+
+    expense_by_main_cat = expenses_by_level_and_month(transactions, 2)
     expense_by_main_cat = expense_by_main_cat.reset_index()
 
     expense_by_month = expenses_by_month(transactions, num_months_back=12)
     expense_by_month = expense_by_month.reset_index()
 
-    import datetime
+    expenses_main_cat_with_changes = expenses_changes_since_prev(expense_by_main_cat, "main_cat")
+    print(expenses_main_cat_with_changes)
+
     mydate = datetime.datetime.now()
     mydate.strftime("%B")
 
     return render_template("analytics.html",
                            expense_by_main_cat=expense_by_main_cat,
-                           expense_by_month=expense_by_month.to_json())
+                           expense_by_month=expense_by_month.to_json(),
+                           expenses_by_month_and_cat=expenses_main_cat_with_changes.to_json())
 
 
 @app.route('/history', methods=['GET'])
