@@ -17,18 +17,21 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 <h1>Here is a an overview of your main expenditures </h1>
-<div>
-  <div id="spend_by_month"></div>
+<div id="charts_overview">
+  <div id="chart_spend_by_month"></div>
+
+  <div id="show_one_month">
+    <div id="chart_spend_by_month_cat_details"></div>
+    <button> Hide </button>
+  </div>
+
+  <div id="chart_spend_by_month"></div>
+  <div id="chart_spend_by_month_item_details"></div>
+
+  <div id="chart_trending_items"></div>
+
+  <div id="chart_spend_by_store"></div>
 </div>
-
-<div id="spend_by_category"></div>
-
-<div id="spend_by_month"></div>
-<div id="spend_by_month_item_details"></div>
-
-<div id="trending_items"></div>
-
-<div id="spend_by_store"></div>
 
 {% if not expense_by_main_cat.empty %}
     <table>
@@ -69,14 +72,17 @@
   <script>
   // Load variables from backend
   var expenseByMonth = JSON.parse({{ expense_by_month|tojson }});
+  var expenseByMonthDetails = JSON.parse({{ expenses_by_month_and_cat|tojson }});
+
   </script>
 
   <script type="text/javascript">
     // Load google charts
-    google.charts.load('current', {'packages':['corechart']});
+    google.charts.load('current', {'packages':['corechart', 'table']});
 
     google.charts.setOnLoadCallback(drawColumnChart);
-    
+    google.charts.setOnLoadCallback(drawMonthlyCatDetailsTable);
+
     // Draw the chart and set the chart values
     function drawColumnChart() {
       var data = new google.visualization.DataTable();
@@ -87,8 +93,7 @@
       var count = Object.keys(expenseByMonth["trans_month_short"]).length;
       for (var i = 0; i < count; i++){
         var month = expenseByMonth["trans_month_short"][i];
-        console.log(i);
-        var spend = expenseByMonth["price_gross"][i];
+        var spend = expenseByMonth["price_net"][i];
         data.addRows([[month, spend]]);
       }
 
@@ -104,7 +109,7 @@
       };
 
       // Display the chart inside the <div> element
-      var chart1 = new google.visualization.ColumnChart(document.getElementById("spend_by_month"));
+      var chart1 = new google.visualization.ColumnChart(document.getElementById("chart_spend_by_month"));
       chart1.draw(data, options);
 
       // Every time the chart fires the "select" event, it should call your selectHandler() function.
@@ -131,6 +136,42 @@
 
         alert('A table row was selected! Selection: '+ message);
       }
+    }
+
+
+    // Draw the monthly category details chart and set the chart values
+    function drawMonthlyCatDetailsTable() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Category #');
+      data.addColumn('string', 'Category');
+      data.addColumn('number', 'Spend');
+      data.addColumn('number', 'Change since last month [%]');
+
+      // Add rows to table
+      var count = Object.keys(expenseByMonthDetails["main_cat"]).length;
+      for (var i = 0; i < count; i++){
+        var main_cat = expenseByMonthDetails["main_cat"][i];
+        var cat_name = "Test name";
+        var spend = expenseByMonthDetails["price_net"][i];
+        var change = Math.round(expenseByMonthDetails["change_since_last_month"][i] * 100);
+        data.addRows([[main_cat, cat_name, spend, change]]);
+      }
+
+      var options = {
+        title: "Spend per category for selected month",
+        width: 800,
+        height: 400,
+        bar: {groupWidth: "90%"},
+        legend: { position: "none" },
+        vAxes: {
+          0: {baseline: 0}
+        }
+      };
+
+      // Display the chart inside the <div> element
+      var chart2 = new google.visualization.Table(document.getElementById("chart_spend_by_month_cat_details"));
+      chart2.draw(data, options);
+
     }
 
 
