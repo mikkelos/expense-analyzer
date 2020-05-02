@@ -41,6 +41,9 @@ def prepare_expenses(df):
     df["unit_price_net"] = pd.to_numeric(df["unit_price_net"], errors="coerce")
     df["discount_amt"] = pd.to_numeric(df["discount_amt"], errors="coerce")
 
+    # Filter out "PANT (negativ)"", 9802, aka return of bottles
+    df = df[df["cat_id"] != 9802]  # Warning, hardcoded category id ..
+
     return df
 
 
@@ -95,7 +98,7 @@ def expenses_by_month(df, num_months_back=12):
     return df
 
 
-def expenses_changes_since_prev(df, join_level):  # , year, month):
+def expenses_changes_since_prev(df, join_key):  # , year, month):
     """Takes a df of expenses and groups by join_level in addition to year and month
     input:
         df (pd.DataFrame): dataframe of transactions to group and filter
@@ -106,7 +109,7 @@ def expenses_changes_since_prev(df, join_level):  # , year, month):
     """
 
     # Group by category, year and month
-    df = df.groupby([join_level, "trans_year", "trans_month"]).sum()
+    df = df.groupby([join_key, "trans_year", "trans_month"]).sum()
 
     df = df.reset_index()
 
@@ -127,15 +130,15 @@ def expenses_changes_since_prev(df, join_level):  # , year, month):
 
     # Join in the spend from last month in a separate column.
     df = df.merge(df, how="left",
-        left_on=(join_level, "prev_year", "prev_month"),
-        right_on=(join_level, "trans_year", "trans_month")
+        left_on=(join_key, "prev_year", "prev_month"),
+        right_on=(join_key, "trans_year", "trans_month")
         )
 
     # For each category, caluclate the change from last month
-    df["change_since_last_month"] = df["price_gross_x"] / df["price_gross_y"] - 1
+    df["change_since_last_month"] = df["price_net_x"] / df["price_net_y"] - 1
 
     # Select relevant columns
-    df = df[[join_level, "trans_year_x", "trans_month_x", "price_net_x", "change_since_last_month"]]
-    df.columns = [join_level, "trans_year", "trans_month", "price_net", "change_since_last_month"]
+    df = df[[join_key, "trans_year_x", "trans_month_x", "price_net_x", "change_since_last_month"]]
+    df.columns = [join_key, "trans_year", "trans_month", "price_net", "change_since_last_month"]
 
     return df
