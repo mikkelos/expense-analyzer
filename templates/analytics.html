@@ -4,11 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Analytics page</title>
+  <script></script>
 
-  <script>
-
-  </script>
 </head>
+
+<style>
+
+div.hideByDefault {
+  display: none;
+}
+
+</style>
+
 <body>
 
 {% include 'navigationBar.html' %}
@@ -18,11 +25,13 @@
 
 <h1>Here is a an overview of your main expenditures </h1>
 <div id="charts_overview">
+  Click on any month to show the categorical break down of expenditure:
   <div id="chart_spend_by_month"></div>
 
-  <div id="show_one_month">
+  <div id="show_one_month" class="hideByDefault test2ndclass">
+    <button onclick="hideElementById('show_one_month')"> Hide table </button>
+    <br>
     <div id="chart_spend_by_month_cat_details"></div>
-    <button> Hide </button>
   </div>
 
   <div id="chart_spend_by_month"></div>
@@ -70,13 +79,35 @@
   </script>
 
   <script>
-  // Load variables from backend
+  // Load data tables from backend
   var expenseByMonth = JSON.parse({{ expense_by_month|tojson }});
   var expenseByMonthDetails = JSON.parse({{ expenses_by_month_and_cat|tojson }});
 
   </script>
 
   <script type="text/javascript">
+
+  function hideElementById(elementId){
+    var x = document.getElementById(elementId);
+      x.style.display = "none";
+  }
+
+  function showElementById(elementId){
+    var x = document.getElementById(elementId);
+    x.style.display = "block";
+  }
+
+  </script>
+
+  <script type="text/javascript">
+
+    // Global variables
+    // Control display of drawMonthlyCatDetailsTable
+    var controlCategoryDetailsMonth = 4;
+
+    // Static lookup tables
+    var months_short = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun', 'Jul', 'Aug', 'Sep','Oct', 'Nov', 'Dec'];
+
     // Load google charts
     google.charts.load('current', {'packages':['corechart', 'table']});
 
@@ -105,7 +136,8 @@
         legend: { position: "none" },
         vAxes: {
           0: {baseline: 0}
-        }
+        },
+        colors: ['#005f5f']
       };
 
       // Display the chart inside the <div> element
@@ -122,22 +154,20 @@
 
         for (var i = 0; i < selection.length; i++) {
           var item = selection[i];
-          if (item.row != null && item.column != null) {
-            var str = data.getFormattedValue(item.row, item.column);
-            message += '{row:' + item.row + ',column:' + item.column + '} = ' + str + '\n';
-          } else if (item.row != null) {
-            var str = data.getFormattedValue(item.row, 0);
-            message += '{row:' + item.row + ', column:none}; value (col 0) = ' + str + '\n';
-          } else if (item.column != null) {
-            var str = data.getFormattedValue(0, item.column);
-            message += '{row:none, column:' + item.column + '}; value (row 0) = ' + str + '\n';
-          }
-        }
 
-        alert('A table row was selected! Selection: '+ message);
+          var selectedMonth = expenseByMonth["trans_month_short"][item.row];
+          var selectedMonthNum = months_short.indexOf(selectedMonth) + 1;
+
+          console.log("User clicked on month_num: "+selectedMonthNum);
+          // Update global variable to control table detail selection:
+          controlCategoryDetailsMonth = selectedMonthNum;
+
+          // Redraw table and set property to visible / block
+          drawMonthlyCatDetailsTable();
+          showElementById("show_one_month");
+        }
       }
     }
-
 
     // Draw the monthly category details chart and set the chart values
     function drawMonthlyCatDetailsTable() {
@@ -148,14 +178,35 @@
       data.addColumn('number', 'Change since last month [%]');
 
       // Add rows to table
-      var count = Object.keys(expenseByMonthDetails["main_cat"]).length;
+      var count = Object.keys(expenseByMonthDetails["cat_id"]).length;
       for (var i = 0; i < count; i++){
-        var main_cat = expenseByMonthDetails["main_cat"][i];
-        var cat_name = "Test name";
-        var spend = expenseByMonthDetails["price_net"][i];
-        var change = Math.round(expenseByMonthDetails["change_since_last_month"][i] * 100);
-        data.addRows([[main_cat, cat_name, spend, change]]);
+        var trans_month = expenseByMonthDetails["trans_month"][i];
+
+        // Only add if row is selected month
+        if (trans_month==controlCategoryDetailsMonth) {
+              var main_cat = expenseByMonthDetails["cat_id"][i];
+              var cat_name = expenseByMonthDetails["cat_name"][i];
+              var spend = expenseByMonthDetails["price_net"][i];
+              var change = expenseByMonthDetails["change_since_last_month"][i];
+              data.addRows([[main_cat, cat_name, spend, change]]);
+        }
+
       }
+
+      // Data formatters
+      // https://developers.google.com/chart/interactive/docs/reference#formatters
+      var formatter = new google.visualization.ArrowFormat();
+      var percentFormatter = new google.visualization.NumberFormat({
+        pattern: '#,### %'
+      });
+      var numberFormatter = new google.visualization.NumberFormat({
+        pattern: '# ###'
+      });
+
+      // Apply formatters
+      numberFormatter.format(data, 2);
+      formatter.format(data, 3);
+      percentFormatter.format(data, 3);
 
       var options = {
         title: "Spend per category for selected month",
@@ -165,7 +216,8 @@
         legend: { position: "none" },
         vAxes: {
           0: {baseline: 0}
-        }
+        },
+        allowHtml: true
       };
 
       // Display the chart inside the <div> element
