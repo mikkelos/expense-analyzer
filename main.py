@@ -28,7 +28,8 @@ from scripts.analytics import (
     expenses_by_level_and_month,
     expenses_by_month,
     expenses_changes_since_prev,
-    add_category_names
+    add_category_names,
+    expenses_by_item
     )
 
 # Define CONSTANTS
@@ -261,6 +262,7 @@ def analytics():
     """ Main page for analysis of expenditures """
 
     transactions = get_all_entities_from_kind_as_df(DATASTORE_KIND_TRANSACTIONS)
+    # Filter transactions to only last 12 months?
     transactions = prepare_expenses(transactions)
 
     expense_by_main_cat = expenses_by_level_and_month(transactions, 2)
@@ -269,11 +271,9 @@ def analytics():
     expense_by_month = expenses_by_month(transactions, num_months_back=12)
     expense_by_month = expense_by_month.reset_index()
 
-    expenses_main_cat_with_changes = expenses_changes_since_prev(expense_by_main_cat, "main_cat")
-
+    expenses_main_cat_with_changes = expenses_changes_since_prev(expense_by_main_cat, ["main_cat"])
     # Rename first column to be able to join with category mapping
     expenses_main_cat_with_changes = expenses_main_cat_with_changes.rename(columns={'main_cat': 'cat_id'})
-
     # Read categories as dataframe and format cat_id as int
     all_categories = get_all_categories()
     all_categories = pd.DataFrame(all_categories.items())
@@ -281,13 +281,25 @@ def analytics():
 
     expenses_main_cat_with_changes = add_category_names(expenses_main_cat_with_changes, all_categories)
 
-    mydate = datetime.datetime.now()
-    mydate.strftime("%B")
+    # Create a table of spend per item, month and main category
+    expenses_by_item_month_cat = expenses_by_item(transactions)
+
+    # Preserve item count column:
+    expenses_by_item_month_cat = expenses_changes_since_prev(expenses_by_item_month_cat,
+                                                             ["main_cat", "item_name"],
+                                                             ["item_count"]
+                                                             )
+
+    # mydate = datetime.datetime.now()
+    # mydate.strftime("%B")
+
+    # Create a dictionary with keys year, month,main_id, mapping to items.
 
     return render_template("analytics.html",
                            expense_by_main_cat=expense_by_main_cat,
                            expense_by_month=expense_by_month.to_json(),
-                           expenses_by_month_and_cat=expenses_main_cat_with_changes.to_json())
+                           expenses_by_month_and_cat=expenses_main_cat_with_changes.to_json(),
+                           expenses_by_item_month_cat=expenses_by_item_month_cat.to_json())
 
 
 @app.route('/history', methods=['GET'])
