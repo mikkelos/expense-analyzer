@@ -196,6 +196,8 @@ def article_lines_coop(response):
     start_y_coordinate = -1     # Determine which point to start extract items
     end_y_coordinate = -1       # Determine which point to stop extract items
 
+    max_y_coordinate = 0        # Used as a fall back if end_y_coordinate is not found
+
     receipt_id_and_datetime = ""
 
     for text in response.text_annotations:
@@ -220,6 +222,15 @@ def article_lines_coop(response):
             end_y_coordinate = min(vertex.y for vertex in text.bounding_poly.vertices)
             if debug:
                 print("Found ending point at {}, after text {}".format(end_y_coordinate, text.description))
+
+        # Check if larger than found before
+        tmp = max(vertex.y for vertex in text.bounding_poly.vertices)
+        if tmp > max_y_coordinate:
+            max_y_coordinate = tmp
+
+    # If no end_y_coordinate is found, set it to the largest
+    if end_y_coordinate == -1:
+        end_y_coordinate = max_y_coordinate
 
     # Iterate through all lines, extract only those with item y coordinate larger than start and smaller than end
     relevant_items = []
