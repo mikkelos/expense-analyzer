@@ -14,6 +14,23 @@ div.hideByDefault {
   display: none;
 }
 
+/* Pattern styles */
+.left-60 {
+  /* background-color: #ff9e2c; */
+  float: left;
+  width: 60%;
+}
+.right-40 {
+  /* background-color: #b6701e; */
+  float: left;
+  width: 40%;
+}
+
+.full-size {
+  clear: both;
+  width: 100%;
+}
+
 </style>
 
 <body>
@@ -29,14 +46,16 @@ div.hideByDefault {
   <div id="chart_spend_by_month"></div>
 
   <div id="show_one_month" class="hideByDefault">
-    <div id="show_on_month_category_table">
-      Click on any row to show the products bought in this category <br>
+    <div id="show_on_month_category_table" class="left-60">
+      Click on any row to show the products bought in this category
+      <br>
       <button onclick="hideElementById('show_one_month')"> Hide table </button>
       <br>
       <div id="chart_spend_by_month_cat_details"></div>
     </div>
 
-    <div id="show_on_month_category_item_table" class="hideByDefault">
+    <div id="show_on_month_category_item_table" class="hideByDefault right-40">
+      <br>
       <button onclick="hideElementById('show_on_month_category_item_table')"> Hide table </button>
       <br>
       <div id="chart_spend_by_month_item_details"></div>
@@ -51,6 +70,7 @@ div.hideByDefault {
   <div id="chart_spend_by_store"></div>
 </div>
 
+<div class="full-size">
 {% if not expense_by_main_cat.empty %}
     <table>
       <tr>
@@ -77,6 +97,7 @@ div.hideByDefault {
     </table>
     <br>
 {% endif %}
+</div>
 
   <script>
   (function() {
@@ -309,7 +330,7 @@ div.hideByDefault {
        },
        allowHtml: true,
        page: "enable",
-       pageSize: 10,
+       pageSize: 15,
        sortAscending: false,
        sortColumn: 2
      };
