@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 
 import os
 import pandas as pd
+import datetime
 # from os.path import join, dirname
 # from dotenv import load_dotenv
 
@@ -23,7 +24,12 @@ from gcp_interactions.datastore import (
 
 # Import analytics utilityFunctions
 from scripts.analytics import (
-    expenses_by_level
+    prepare_expenses,
+    expenses_by_level_and_month,
+    expenses_by_month,
+    expenses_changes_since_prev,
+    add_category_names,
+    expenses_by_item
     )
 
 # Define CONSTANTS
@@ -201,12 +207,20 @@ def assignCategories():
         all_categories = get_all_categories()
         all_main_categories = get_main_categories(all_categories)
 
+        # Remove the main categories
+        categories_to_hide = get_main_categories(all_categories)
+
+        # These two special keys should not be hidden
+        categories_to_hide.pop(-1, None)
+        categories_to_hide.pop(0, None)
+
+        # Remove keys which should not be part of drop-down table
+        for remove_key in categories_to_hide:
+            all_categories.pop(remove_key, None)
+
         # Return the list of items in a tabular format
-
         # Await feedback from user. Make a way to search in the categories
-
         # Iterate through the user feedback and write back to the datastore
-
         # Give the user two choices: 10 more, go back
         return render_template("missing_categories.html",
                                item_list=item_names_without_category,
@@ -248,11 +262,44 @@ def analytics():
     """ Main page for analysis of expenditures """
 
     transactions = get_all_entities_from_kind_as_df(DATASTORE_KIND_TRANSACTIONS)
-    expense_by_main_cat = expenses_by_level(transactions, 2)
+    # Filter transactions to only last 12 months?
+    transactions = prepare_expenses(transactions)
+
+    expense_by_main_cat = expenses_by_level_and_month(transactions, 2)
     expense_by_main_cat = expense_by_main_cat.reset_index()
 
+    expense_by_month = expenses_by_month(transactions, num_months_back=12)
+    expense_by_month = expense_by_month.reset_index()
+
+    expenses_main_cat_with_changes = expenses_changes_since_prev(expense_by_main_cat, ["main_cat"])
+    # Rename first column to be able to join with category mapping
+    expenses_main_cat_with_changes = expenses_main_cat_with_changes.rename(columns={'main_cat': 'cat_id'})
+    # Read categories as dataframe and format cat_id as int
+    all_categories = get_all_categories()
+    all_categories = pd.DataFrame(all_categories.items())
+    all_categories.columns = ["cat_id", "cat_name"]
+
+    expenses_main_cat_with_changes = add_category_names(expenses_main_cat_with_changes, all_categories)
+
+    # Create a table of spend per item, month and main category
+    expenses_by_item_month_cat = expenses_by_item(transactions)
+
+    # Preserve item count column:
+    expenses_by_item_month_cat = expenses_changes_since_prev(expenses_by_item_month_cat,
+                                                             ["main_cat", "item_name"],
+                                                             ["item_count"]
+                                                             )
+
+    # mydate = datetime.datetime.now()
+    # mydate.strftime("%B")
+
+    # Create a dictionary with keys year, month,main_id, mapping to items.
+
     return render_template("analytics.html",
-                           expense_by_main_cat=expense_by_main_cat)
+                           expense_by_main_cat=expense_by_main_cat,
+                           expense_by_month=expense_by_month.to_json(),
+                           expenses_by_month_and_cat=expenses_main_cat_with_changes.to_json(),
+                           expenses_by_item_month_cat=expenses_by_item_month_cat.to_json())
 
 
 @app.route('/history', methods=['GET'])

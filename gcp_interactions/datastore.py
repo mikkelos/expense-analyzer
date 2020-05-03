@@ -114,6 +114,7 @@ def get_all_categories():
     categories = {}
     # Add the dummy value for unassigned
     categories[-1] = "Ikke tildelt"
+    categories[0] = "Ikke tildelt"
 
     for entity in list(q_result):
         key = entity.key.id_or_name
@@ -193,3 +194,30 @@ def upload_categories():
 
         # Saves the entity
         datastore_client.put(task)
+
+
+def manual_upload_category():
+    # NB BOTH cat_id and "value" as strings!
+    articles_querified = [["cat_id", "value"], ["cat_id2", "value2"]]
+    articles_querified = [
+        ]
+
+    task_list = []        # Used for bulk upload to datastore
+
+    # Loop over all articles and insert one by one
+    for article in articles_querified:
+        id = article[0]
+        # Only happens if we have not seen this item before. Then we add it to
+        # unmapped items with an id of -1.
+
+        task_key = datastore_client.key(DATASTORE_KIND_CATEGORIES, id)
+        task = datastore.Entity(key=task_key)
+        task["cat_id"] = article[1]
+
+        task_list.append(task)
+        print('Added {}: {}'.format(task.key.name, task['cat_name']))
+
+        # End for loop
+
+    # Saves multiple entities at once:
+    datastore_client.put_multi(task_list)
