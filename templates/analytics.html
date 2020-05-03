@@ -28,10 +28,19 @@ div.hideByDefault {
   Click on any month to show the categorical break down of expenditure:
   <div id="chart_spend_by_month"></div>
 
-  <div id="show_one_month" class="hideByDefault test2ndclass">
-    <button onclick="hideElementById('show_one_month')"> Hide table </button>
-    <br>
-    <div id="chart_spend_by_month_cat_details"></div>
+  <div id="show_one_month" class="hideByDefault">
+    <div id="show_on_month_category_table">
+      Click on any row to show the products bought in this category <br>
+      <button onclick="hideElementById('show_one_month')"> Hide table </button>
+      <br>
+      <div id="chart_spend_by_month_cat_details"></div>
+    </div>
+
+    <div id="show_on_month_category_item_table" class="hideByDefault">
+      <button onclick="hideElementById('show_on_month_category_item_table')"> Hide table </button>
+      <br>
+      <div id="chart_spend_by_month_item_details"></div>
+    </div>
   </div>
 
   <div id="chart_spend_by_month"></div>
@@ -82,6 +91,7 @@ div.hideByDefault {
   // Load data tables from backend
   var expenseByMonth = JSON.parse({{ expense_by_month|tojson }});
   var expenseByMonthDetails = JSON.parse({{ expenses_by_month_and_cat|tojson }});
+  var expenseByMonthItemDetails = JSON.parse({{ expenses_by_item_month_cat|tojson }});
 
   </script>
 
@@ -104,6 +114,7 @@ div.hideByDefault {
     // Global variables
     // Control display of drawMonthlyCatDetailsTable
     var controlCategoryDetailsMonth = 4;
+    var controlMonthItemDetailsCategory = 10;
 
     // Static lookup tables
     var months_short = ['Jan', 'Feb', 'Mar', 'Apr', 'May','Jun', 'Jul', 'Aug', 'Sep','Oct', 'Nov', 'Dec'];
@@ -113,6 +124,7 @@ div.hideByDefault {
 
     google.charts.setOnLoadCallback(drawColumnChart);
     google.charts.setOnLoadCallback(drawMonthlyCatDetailsTable);
+    google.charts.setOnLoadCallback(drawMonthlyItemDetailsTable);
 
     // Draw the chart and set the chart values
     function drawColumnChart() {
@@ -158,13 +170,14 @@ div.hideByDefault {
           var selectedMonth = expenseByMonth["trans_month_short"][item.row];
           var selectedMonthNum = months_short.indexOf(selectedMonth) + 1;
 
-          console.log("User clicked on month_num: "+selectedMonthNum);
+          //console.log("User clicked on month_num: "+selectedMonthNum);
           // Update global variable to control table detail selection:
           controlCategoryDetailsMonth = selectedMonthNum;
 
           // Redraw table and set property to visible / block
           drawMonthlyCatDetailsTable();
           showElementById("show_one_month");
+          drawMonthlyItemDetailsTable();
         }
       }
     }
@@ -192,10 +205,9 @@ div.hideByDefault {
         }
 
       }
-
       // Data formatters
       // https://developers.google.com/chart/interactive/docs/reference#formatters
-      var formatter = new google.visualization.ArrowFormat();
+      var arrowFormatter = new google.visualization.ArrowFormat();
       var percentFormatter = new google.visualization.NumberFormat({
         pattern: '#,### %'
       });
@@ -205,7 +217,7 @@ div.hideByDefault {
 
       // Apply formatters
       numberFormatter.format(data, 2);
-      formatter.format(data, 3);
+      arrowFormatter.format(data, 3);
       percentFormatter.format(data, 3);
 
       var options = {
@@ -224,8 +236,88 @@ div.hideByDefault {
       var chart2 = new google.visualization.Table(document.getElementById("chart_spend_by_month_cat_details"));
       chart2.draw(data, options);
 
+      // Every time the table fires the "select" event, it should call your selectHandler() function.
+      google.visualization.events.addListener(chart2, 'select', chart2SelectHandler);
+
+      //function chart1SelectHandler(e) {
+      function chart2SelectHandler() {
+        var selection = chart2.getSelection();
+
+        // Determine which category was on selected row, then update global variable
+        if (selection.length > 0) {
+          controlMonthItemDetailsCategory = data.getValue(selection[0].row, 0);
+        }
+        // Redraw table and set property to visible (style="block")
+        drawMonthlyItemDetailsTable();
+        showElementById("show_on_month_category_item_table");
+      }
     }
 
+
+
+    function drawMonthlyItemDetailsTable() {
+      var data = new google.visualization.DataTable();
+
+     // Item name, item count, amount, % change from last month
+     data.addColumn('string', 'Item name');
+     data.addColumn('number', 'No. of items');
+     data.addColumn('number', 'Spend');
+     data.addColumn('number', 'Change since last month [%]');
+
+     // Add rows to table
+     var count = Object.keys(expenseByMonthItemDetails["main_cat"]).length;
+     for (var i = 0; i < count; i++){
+       var trans_month = expenseByMonthItemDetails["trans_month"][i];
+       var main_cat = expenseByMonthItemDetails["main_cat"][i];
+
+       // Only add if row is selected month and category
+       if (trans_month == controlCategoryDetailsMonth &&
+           main_cat == controlMonthItemDetailsCategory) {
+             var item_name = expenseByMonthItemDetails["item_name"][i];
+             var no_items = expenseByMonthItemDetails["item_count"][i];
+             var spend = expenseByMonthItemDetails["price_net"][i];
+             var change = expenseByMonthItemDetails["change_since_last_month"][i];
+             data.addRows([[item_name, no_items, spend, change]]);
+       }
+
+     }
+     // Data formatters
+     // https://developers.google.com/chart/interactive/docs/reference#formatters
+     var arrowFormatter = new google.visualization.ArrowFormat();
+     var percentFormatter = new google.visualization.NumberFormat({
+       pattern: '#,### %'
+     });
+     var numberFormatter = new google.visualization.NumberFormat({
+       pattern: '# ###'
+     });
+
+     // Apply formatters
+     numberFormatter.format(data, 1);
+     numberFormatter.format(data, 2);
+     arrowFormatter.format(data, 3);
+     percentFormatter.format(data, 3);
+
+     // Set options
+     var options = {
+       title: "Spend per item for selected month and category",
+       //width: 800,
+       //height: 400,
+       bar: {groupWidth: "90%"},
+       legend: { position: "none" },
+       vAxes: {
+         0: {baseline: 0}
+       },
+       allowHtml: true,
+       page: "enable",
+       pageSize: 10,
+       sortAscending: false,
+       sortColumn: 2
+     };
+
+     // Display the chart inside the <div> element
+     var chart3 = new google.visualization.Table(document.getElementById("chart_spend_by_month_item_details"));
+     chart3.draw(data, options);
+   }
 
   </script>
 
