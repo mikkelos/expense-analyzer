@@ -24,6 +24,19 @@ def add_category_names(df, category_mapping):
     return pd.merge(df, category_mapping, on="cat_id", how="left")
 
 
+def add_main_cat(df):
+    """ Takes a df and adds a column with the main category
+        input:
+            df (pd.DataFrame): dataframe to add column to, must contain "cat_id"
+        returns:
+            df (pd.DataFrame): dataframe with extracted main cat
+    """
+
+    df["main_cat"] = df["cat_id"].astype(str).str.slice(0, 2)
+
+    return df
+
+
 def prepare_expenses(df):
     """ Takes in a dataframe and performs basic type casting, adds auxilliary columns etc """
 
@@ -98,18 +111,19 @@ def expenses_by_month(df, num_months_back=12):
     return df
 
 
-def expenses_changes_since_prev(df, join_key):  # , year, month):
+def expenses_changes_since_prev(df, join_keys, colsToKeep=[]):  # , year, month):
     """Takes a df of expenses and groups by join_level in addition to year and month
     input:
         df (pd.DataFrame): dataframe of transactions to group and filter
-        join_level (str): The column to which compare with, in addition to year and month
+        join_level (list): The columns to which compare with, in addition to year and month
+        colsToKeep (list): Additional columns to keep after join
 
     returns:
         df (pd.DataFrame): filtered and grouped dataframe
     """
 
     # Group by category, year and month
-    df = df.groupby([join_key, "trans_year", "trans_month"]).sum()
+    df = df.groupby(join_keys + ["trans_year", "trans_month"]).sum()
 
     df = df.reset_index()
 
@@ -130,15 +144,30 @@ def expenses_changes_since_prev(df, join_key):  # , year, month):
 
     # Join in the spend from last month in a separate column.
     df = df.merge(df, how="left",
-        left_on=(join_key, "prev_year", "prev_month"),
-        right_on=(join_key, "trans_year", "trans_month")
+        left_on=(*join_keys, "prev_year", "prev_month"),
+        right_on=(*join_keys, "trans_year", "trans_month"),
+        suffixes=('', '_y')
         )
 
     # For each category, caluclate the change from last month
-    df["change_since_last_month"] = df["price_net_x"] / df["price_net_y"] - 1
+    df["change_since_last_month"] = df["price_net"] / df["price_net_y"] - 1
 
     # Select relevant columns
-    df = df[[join_key, "trans_year_x", "trans_month_x", "price_net_x", "change_since_last_month"]]
-    df.columns = [join_key, "trans_year", "trans_month", "price_net", "change_since_last_month"]
+    keep = colsToKeep + join_keys + ["trans_year", "trans_month", "price_net", "change_since_last_month"]
+    df = df[keep]
+
+    return df
+
+
+def expenses_by_item(df):
+    """Takes a df of expenses and groups on item level join_level, in addition to year, month and cat
+    input:
+        df (pd.DataFrame): dataframe of transactions to group and filter
+    returns:
+        df (pd.DataFrame): grouped dataframe
+    """
+    df = add_main_cat(df)
+    df = df.groupby(["trans_year", "trans_month", "main_cat", "item_name"]).sum()
+    df = df.reset_index()
 
     return df
