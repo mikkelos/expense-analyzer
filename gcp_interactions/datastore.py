@@ -5,6 +5,10 @@ from datetime import datetime
 from google.cloud import datastore
 from google.cloud import storage
 
+from gcp_interactions import gcp_clients
+# This defaults to "prod". Override with "dev" for local runs
+gcp_clients.ENVIRONMENT = "dev"
+
 # This is only used locally:
 # from google.oauth2 import service_account
 
@@ -25,27 +29,10 @@ DATASTORE_KIND_TRANSACTIONS = "transaction"
 """ SESSION VARIABLES """
 
 debug = False
-developing = True
-local_run = False
 
-
-# This is only used for local development:
-"""
-key_path = "/Volumes/GoogleDrive/My Drive/00. My Documents/03. Internt/24. Expense analyzer/config_files/expense-analyzer-260008-0cac2ecd3671.json"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
-credentials = service_account.Credentials.from_service_account_file(
-    key_path,
-    scopes=["https://www.googleapis.com/auth/cloud-platform"]
-)
-# Instantiate clients
-datastore_client = datastore.Client(
-    credentials=credentials
-)
-
-"""
-
-# This is used for GCP deployment
-datastore_client = datastore.Client()
+# Initiate gcp clients
+datastore_client = gcp_clients.init_service_client(service="datastore")
+storage_client = gcp_clients.init_service_client(service="storage")
 
 
 """ STORAGE BUCKET """
@@ -58,15 +45,7 @@ def upload_blob(file, user, store_name):
             user (str): name of user that uploaded file
             store_name (str): name of the store of the receipt
     """
-    """
-    if local_run:
-        storage_client = storage.Client(
-            credentials=credentials
-        )
-    else:
-        storage_client = storage.Client()
-    """
-    storage_client = storage.Client()
+    # storage_client = storage.Client()
     bucket = storage_client.bucket(UNPROCESSED_BUCKET_NAME)
     now = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
     destination_blob_name = "image" + now
