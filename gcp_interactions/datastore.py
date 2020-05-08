@@ -7,7 +7,7 @@ from google.cloud import storage
 
 from gcp_interactions import gcp_clients
 # This defaults to "prod". Override with "dev" for local runs
-gcp_clients.ENVIRONMENT = "dev"
+gcp_clients.ENVIRONMENT = "prod"
 
 # This is only used locally:
 # from google.oauth2 import service_account
