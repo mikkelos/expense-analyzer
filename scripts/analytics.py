@@ -171,3 +171,43 @@ def expenses_by_item(df):
     df = df.reset_index()
 
     return df
+
+
+def join_trans_and_receipt(transactions, receipts):
+    """ Takes a df of transactions and joins in receipt metadata
+    input:
+        transactions (pd.DataFrame): transactions, with a link to receipt image file
+        receipts (pd.DataFrame): metadata of receips, including store_name
+    returns:
+        df (pd.DataFrame): transactions df joined with columns from receipts
+    """
+
+    # Todo, find key columns
+    df = transactions.merge(receipts, left_on="", right_on="")
+    return df
+
+
+def expense_by_store(transactions_and_receipt_metadata):
+    """Takes a transaction df of expenses and receipt metadata and groups on receipt id, in addition to year, month and cat
+    input:
+        df (pd.DataFrame): dataframe of transactions to group and filter
+    returns:
+        df (pd.DataFrame): grouped dataframe
+    """
+
+    # Group expenses on receipt_id. Join this to the storage bucket metadata
+    df = transactions_and_receipt_metadata
+
+    df = (df.groupby(["year", "month", "store_name"])
+            .agg(
+                {"receipt_id": "nunique",
+                 "item_count": "sum",
+                 "price_net": "sum"
+                 })
+            .reset_index()
+            .rename(columns={"receipt_id": "visits"})
+          )
+
+    df = df.reset_index()
+
+    return df
