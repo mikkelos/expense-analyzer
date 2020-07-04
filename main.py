@@ -177,6 +177,9 @@ def uploadImageToBucket():
         This is a long text to test if data is passed correctly.
         <br>
         The store selected was {} and the file was called {}
+        <br>
+        <form action="/upload">
+            <input type="submit" value="Back to upload page" /></form>
         </body>
         </html>
         '''.format(store_name, filename)
