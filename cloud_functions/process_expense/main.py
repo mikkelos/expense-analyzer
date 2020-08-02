@@ -87,8 +87,25 @@ def gcs_trigger(data, context):
     path = "gs://"+PROCESSED_BUCKET_NAME+"/"+file_name
     response = detect_text(path)
 
+    """ Get username and store name from blob metadata """
+    # Instantiates a client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(PROCESSED_BUCKET_NAME)
+    blob = bucket.get_blob(file_name)
+    metadata = blob.metadata
+
+    user_name = "Not registered"
+    store_name = "Default"
+
+    if(metadata):
+        user_name = blob.metadata["uploaded_by"]
+        store_name = blob.metadata["store_name"]
+
     """ Extract the expense lines """
-    relevant_lines, receipt_id_and_datetime = article_lines_coop(response)
+    if store_name == "bunnpris":
+        relevant_lines, receipt_id_and_datetime = article_lines_bunnpris(response)
+    else:
+        relevant_lines, receipt_id_and_datetime = article_lines_coop(response)
     receipt_lines = allocate_lines(relevant_lines)
     actual_lines = lines_to_text(receipt_lines)
     articles_querified = query_preparation(actual_lines)
@@ -97,18 +114,6 @@ def gcs_trigger(data, context):
     receipt_id = receipt_id_and_datetime.split(" ")[0].strip()
     receipt_date = receipt_id_and_datetime.split(" ")[1].strip()
     datetime_object = datetime.strptime(receipt_date, '%d.%m.%Y')
-
-    """ Get username from blob metadata """
-    # Instantiates a client
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(PROCESSED_BUCKET_NAME)
-    blob = bucket.get_blob(file_name)
-    metadata = blob.metadata
-
-    user_name = "Not registered"
-
-    if(metadata):
-        user_name = blob.metadata["uploaded_by"]
 
     """ Write result to DB """
     writeToDatastore(articles_querified, user_name, datetime_object, receipt_id, file_name)
@@ -472,8 +477,8 @@ def query_preparation(receipt_text):
                 print("Found a antall line")
                 print(article.split(" "))
 
-        # See if line contains kr/kg. Typically for Bunnpris, this is an auxilliary calculation line, not an article
-        # If so, do not add it
+        # If line contains kr/kg. Typically for Bunnpris, then an auxilliary calculation line
+        # Not an article, do not add it
         elif "kr/kg" in article.replace(" ", ""):
             if debug:
                 print("Found a line with kilo price. Skipping it")
