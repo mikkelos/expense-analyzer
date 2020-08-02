@@ -89,7 +89,7 @@ def gcs_trigger(data, context):
 
     """ Extract the expense lines """
     relevant_lines, receipt_id_and_datetime = article_lines_coop(response)
-    receipt_lines = allocate_lines_coop(relevant_lines)
+    receipt_lines = allocate_lines(relevant_lines)
     actual_lines = lines_to_text(receipt_lines)
     articles_querified = query_preparation(actual_lines)
 
@@ -242,10 +242,74 @@ def article_lines_coop(response):
     return relevant_items, receipt_id_and_datetime
 
 
-# Key = line_number, value = item
-# Idea: For each bounding box, calculate the mid y coordinate. If this coordinate is inside the bounding box of
-# another, then these are on the same line.
-def allocate_lines_coop(items):
+#  ### PARSER FOR BUNNPRIS
+def article_lines_bunnpris(response):
+    # Locate the relevant range to extract items
+    start_y_coordinate = -1     # Determine which point to start extract items
+    end_y_coordinate = -1       # Determine which point to stop extract items
+
+    max_y_coordinate = 0        # Used as a fall back if end_y_coordinate is not found
+
+    receipt_id_and_datetime = ""
+
+    for text in response.text_annotations:
+        if len(text.description) > 100:
+            # Full text, extract the receipt ID and datetime
+            full_text = text.description
+
+            # Start substring from the search term
+            search_term = "Kvitt."
+            start_index = full_text.find(search_term) + len(search_term)
+
+            # End the substring at next newline
+            end_index = start_index + full_text[start_index:].find("\n")
+
+            # This now contains id
+            receipt_id = full_text[start_index:end_index].strip()
+
+            # To find date and time, search for datetime regex pattern
+            date_and_time_pattern = "[0-9]{2}\.[0-9]{2}\.[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}"
+            matches = re.findall(date_and_time_pattern, full_text)
+
+            if len(matches) > 0:
+                date_and_time = matches[0]
+            else:
+                date_and_time = "date_not_found time_not_found"
+
+            # Concat datetime to the string
+            receipt_id_and_datetime = receipt_id + " " + date_and_time
+
+        elif "Herav" in text.description:
+            # Last line before the actual articles start
+            start_y_coordinate = max(vertex.y for vertex in text.bounding_poly.vertices)
+            if debug:
+                print("Found starting point at {}, after text {}".format(start_y_coordinate, text.description))
+        elif "TOTALT" in text.description:
+            end_y_coordinate = min(vertex.y for vertex in text.bounding_poly.vertices)
+            if debug:
+                print("Found ending point at {}, after text {}".format(end_y_coordinate, text.description))
+
+        # Check if larger than found before
+        tmp = max(vertex.y for vertex in text.bounding_poly.vertices)
+        if tmp > max_y_coordinate:
+            max_y_coordinate = tmp
+
+    # If no end_y_coordinate is found, set it to the largest
+    if end_y_coordinate == -1:
+        end_y_coordinate = max_y_coordinate
+
+    # Iterate through all lines, extract only those with item y coordinate larger than start and smaller than end
+    relevant_items = []
+    for text in response.text_annotations:
+        if text.bounding_poly.vertices[0].y > start_y_coordinate and text.bounding_poly.vertices[0].y < end_y_coordinate:
+            # print("Found an item line!: {}".format(text.description))
+
+            relevant_items.append(text)
+
+    return relevant_items, receipt_id_and_datetime
+
+
+def allocate_lines(items):
     """
     :param items: input is a list of relevant text boxes from Google vision, containing the text found and bounding polygon
     :return: returns a dictionary, with all items allocated to a line_id containing all elements on that same line, sorted by their x-coordinates
@@ -336,7 +400,7 @@ def lines_to_text(receipt_lines):
     for line in receipt_lines:
         text = ""
         for item in receipt_lines[line]:
-            text += " " + item.description
+            text += " " + item.description.strip("#")  # Strip leading hashtags
         receipt_text.append(text.lower().strip())
     return receipt_text
 
@@ -393,8 +457,6 @@ def query_preparation(receipt_text):
                 print(article.split(" "))
 
         elif "antall" in article:
-            # Do something TODO
-
             antall_line = article.split(" ")
             # Will have the structure: ['antall:', '2', 'stk', '1.60', 'kr/stk']
 
@@ -408,6 +470,13 @@ def query_preparation(receipt_text):
 
             if debug:
                 print("Found a antall line")
+                print(article.split(" "))
+
+        # See if line contains kr/kg. Typically for Bunnpris, this is an auxilliary calculation line, not an article
+        # If so, do not add it
+        elif "kr/kg" in article.replace(" ", ""):
+            if debug:
+                print("Found a line with kilo price. Skipping it")
                 print(article.split(" "))
 
         elif "artikler" not in article:
@@ -426,10 +495,17 @@ def query_preparation(receipt_text):
                 curr_item_line["unit_price_net"] = price
                 curr_item_line["item_count"] = 1
 
-                articles_querified.append(curr_item_line)
-                if debug:
-                    print("len was 3")
-                    print("Appending item '{}' with price '{}'. Full split is '{}'".format(item, price, x))
+                # Check if an item name was found.
+                # If this is blank, likely an error occurred and should skip
+                if len(curr_item_line["item_name"]) < 1:
+                    if debug:
+                        print("A too short item name was found. Skipping it")
+                        print(x)
+                else:
+                    articles_querified.append(curr_item_line)
+                    if debug:
+                        print("len was 3")
+                        print("Appending item '{}' with price '{}'. Full split is '{}'".format(item, price, x))
             else:
                 # Typically weight times price per kg.
                 if developing:
