@@ -109,7 +109,8 @@ def hello():
         <!doctype html>
         <html>
         <body>
-        This is a long text to test if data is passed correctly.
+        The file received has been upload and is now processed.
+        Please check the history tab to see the most recent files received.
         <br>
         The store selected was {} and the file was called {}
         </body>
