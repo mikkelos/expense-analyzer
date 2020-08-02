@@ -3,6 +3,7 @@
 GCP deploy command: gcloud functions deploy gcs_trigger_generic --runtime python37 --trigger-resource unprocessed_expenses --trigger-event google.storage.object.finalize
 # --entry-point to define a different entry function than gcs_trigger_generic
 
+# Most updated command:
 gcloud functions deploy process_expense --region europe-west1 --runtime python37 --trigger-resource unprocessed_expense_bucket_1 --trigger-event google.storage.object.finalize --entry-point gcs_trigger
 """
 
