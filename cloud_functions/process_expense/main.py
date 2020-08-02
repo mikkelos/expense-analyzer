@@ -405,7 +405,8 @@ def lines_to_text(receipt_lines):
     for line in receipt_lines:
         text = ""
         for item in receipt_lines[line]:
-            text += " " + item.description.strip("#")  # Strip leading hashtags
+            # Get descriptions, strip leading hashtags and asterixs
+            text += " " + item.description.strip("#").lstrip("*")
         receipt_text.append(text.lower().strip())
     return receipt_text
 
