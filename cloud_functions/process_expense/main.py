@@ -446,6 +446,7 @@ def query_preparation(receipt_text):
         if "rabatt" in article:
             # TODO: x = re.spltt(discount_pattern, article)
             # articles.append(["discount", x[0], x[1]])
+            # Does not work for bunnpris. Eg. recept id 1282506
 
             discount_line = article.split(" ")
             # Will have the structure: ['rabatt:', 'nok', '13.16', '(40%', 'av', '32.90)']
