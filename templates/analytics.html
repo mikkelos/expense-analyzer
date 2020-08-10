@@ -72,7 +72,7 @@ div.hideByDefault {
 
 <!-- This was used initially to show aggregated data from the datastore, but is now replaced with proper graphs
 <div class="full-size">
-{% if not expense_by_main_cat.empty %}
+{# {% if not expense_by_main_cat.empty %} #}
     <table>
       <tr>
         <th> Year </th>
@@ -84,7 +84,7 @@ div.hideByDefault {
         <th> Sum - Items </th>
       </tr>
 
-      {% for key,value in expense_by_main_cat.iterrows() %}
+      {# {% for key,value in expense_by_main_cat.iterrows() %} #}
       <tr>
         <td> {{value["trans_year"]}} </td>
         <td> {{value["trans_month"]}} </td>
@@ -94,10 +94,10 @@ div.hideByDefault {
         <td> {{value["discount_amt"]}} </td>
         <td> {{value["item_count"]}} </td>
       </tr>
-      {% endfor %}
+      {# {% endfor %}#}
     </table>
     <br>
-{% endif %}
+{# {% endif %} #}
 </div>
 -->
 
