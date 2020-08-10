@@ -70,36 +70,6 @@ div.hideByDefault {
   <div id="chart_spend_by_store"></div>
 </div>
 
-<!-- This was used initially to show aggregated data from the datastore, but is now replaced with proper graphs
-<div class="full-size">
-{# {% if not expense_by_main_cat.empty %} #}
-    <table>
-      <tr>
-        <th> Year </th>
-        <th> Month </th>
-        <th> Main category </th>
-        <th> Sum - Gross </th>
-        <th> Sum - Net </th>
-        <th> Sum - Discount </th>
-        <th> Sum - Items </th>
-      </tr>
-
-      {# {% for key,value in expense_by_main_cat.iterrows() %} #}
-      <tr>
-        <td> {{value["trans_year"]}} </td>
-        <td> {{value["trans_month"]}} </td>
-        <td> {{value["main_cat"]}} </td>
-        <td> {{value["price_gross"]}} </td>
-        <td> {{value["price_net"]}} </td>
-        <td> {{value["discount_amt"]}} </td>
-        <td> {{value["item_count"]}} </td>
-      </tr>
-      {# {% endfor %}#}
-    </table>
-    <br>
-{# {% endif %} #}
-</div>
--->
 
   <script>
   (function() {
