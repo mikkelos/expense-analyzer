@@ -300,7 +300,7 @@ def analytics():
     # Create a dictionary with keys year, month,main_id, mapping to items.
 
     return render_template("analytics.html",
-                           expense_by_main_cat=expense_by_main_cat,
+                           # expense_by_main_cat=expense_by_main_cat,
                            expense_by_month=expense_by_month.to_json(),
                            expenses_by_month_and_cat=expenses_main_cat_with_changes.to_json(),
                            expenses_by_item_month_cat=expenses_by_item_month_cat.to_json())
