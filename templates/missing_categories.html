@@ -23,30 +23,22 @@ just leave it as -1
         <th> Item </th>
         {# <th> Main category </th> #}
         <th> Category </th>
+        <th> Suggested category </th>
+        <th> Apply suggestion </th>>
       </tr>
 
       {% for item in item_list %}
       <tr>
-        <td> <input type="text" name='item{{loop.index}}' value='{{item}}'</td>
+        <td> <input type="text" name='item{{loop.index}}' value='{{item}}' readonly></td>
         <!-- <td> <input type="text" name="item1"> </td> -->
-        {# COMMENT
-        <td>
-          <select name="mainCategory{{loop.index}}">
-            {% for category in category_dict.keys()%}
-            <option type="number" value={{category}}>{{category}} - {{category_dict[category]}}</option>
-            {% endfor %}
-          </select>
-        </td>
-        #}
-
         <td>
           <select name="category{{loop.index}}">
             {% for category in category_dict.keys()%}
             <option type="number" value={{category}}>{{category}} - {{category_dict[category]}}</option>
             {% endfor %}
           </select></td>
-        <td> </td>
-        <td> </td>
+        <td> TEST </td>
+        <td> <button> Use </button></td>
       </tr>
       {% endfor %}
     </table>
