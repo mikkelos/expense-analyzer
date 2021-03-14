@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import pandas as pd
 import datetime
+import pytz
 # from os.path import join, dirname
 # from dotenv import load_dotenv
 
@@ -266,7 +267,8 @@ def analytics():
     """ Main page for analysis of expenditures """
 
     transactions = get_all_entities_from_kind_as_df(DATASTORE_KIND_TRANSACTIONS)
-    # Filter transactions to only last 12 months?
+    # Filter transactions to only last 12 months
+    transactions = transactions[(datetime.datetime.now().replace(tzinfo=pytz.UTC) - transactions["trans_date"]).dt.days < (365 - 31)]
     transactions = prepare_expenses(transactions)
 
     expense_by_main_cat = expenses_by_level_and_month(transactions, 2)
